@@ -1,0 +1,20 @@
+---
+local:
+  port: 7072
+
+backends:
+  timeout: 75    # The same as nginx default keep_alive_timeout
+  balance: "url_hash"
+  port: 8888
+  password: secret
+  method: "rc4-md5"
+
+  servers:
+  - ip: 127.0.0.1
+    port: 7777
+    password: secret-one
+    method: "rc4-md5"
+
+  - ip: 127.0.0.2
+  - ip: 127.0.0.3
+  - ip: 127.0.0.4

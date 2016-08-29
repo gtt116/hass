@@ -62,14 +62,13 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 	startAt := time.Now()
 	ssAddr, server, err := ChoiceBackend(p.cfg, tgt)
 	if err != nil {
-		server.IncreaseErr()
 		return err
 	}
 
 	// TODO(gtt): support fail over
 	ssConn, err := ss.Dial(targetAddr, ssAddr, server.Cipher())
 	if err != nil {
-		Debugln(err)
+		server.IncreaseErr()
 		return err
 	}
 	defer ssConn.Close()

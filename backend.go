@@ -11,6 +11,10 @@ import (
 	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
 )
 
+const (
+	DefaultWeight = 100
+)
+
 // key is shawdowsocks server addr like "192.2.2.2:8080"
 var backends = make(map[string]*Backend)
 
@@ -58,7 +62,7 @@ func (b *Backend) DecreseConnCount() {
 	b.ConnCountCur--
 }
 
-func (b *Backend) IncreaseErr() {
+func (b *Backend) AddErr() {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	b.ConnCountErr++
@@ -77,7 +81,11 @@ func InitBackend(cfg *Config) error {
 	}
 
 	hosts := backendKeys()
-	backendRing = hashring.New(hosts)
+	hostWeights := make(map[string]int, len(hosts))
+	for _, host := range hosts {
+		hostWeights[host] = DefaultWeight
+	}
+	backendRing = hashring.NewWithWeights(hostWeights)
 	return nil
 }
 
@@ -107,6 +115,29 @@ func backendKeys() []string {
 	return keys
 }
 
+// Retry until find an available connecton. The caller should close the
+// connection.
+func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
+	for {
+		addr, backend, err := ChoiceBackend(config, target)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		Debugf("Connecting backend: %v", addr)
+		ssConn, err := ss.Dial(target.Addr(), addr, backend.Cipher())
+		if err != nil {
+			backendRing = backendRing.RemoveNode(addr)
+			backend.AddErr()
+			Debugf("Removing backend %v for reason: %v", addr, err)
+			continue
+		}
+		return ssConn, backend, nil
+	}
+}
+
+// Choice the correct backend by algorithms specified in config file.
+// weight down the server which Dial() failed.
 func ChoiceBackend(config *Config, target *Target) (addr string, backend *Backend, err error) {
 	const (
 		Random    = "random"

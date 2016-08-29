@@ -5,8 +5,6 @@ import (
 	"os"
 	"sync"
 	"time"
-
-	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
 )
 
 type ConnTrack struct {
@@ -58,23 +56,17 @@ func (p *Proxyer) popConnPair(connId int) {
 // pick up a backend shadowsocks server then pipe source and server.
 func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 
-	targetAddr := tgt.Addr()
 	startAt := time.Now()
-	ssAddr, server, err := ChoiceBackend(p.cfg, tgt)
-	if err != nil {
-		return err
-	}
+	targetAddr := tgt.Addr()
 
-	// TODO(gtt): support fail over
-	ssConn, err := ss.Dial(targetAddr, ssAddr, server.Cipher())
+	ssConn, server, err := ConnBackend(p.cfg, tgt)
 	if err != nil {
-		server.IncreaseErr()
 		return err
 	}
 	defer ssConn.Close()
 
 	latency := int64(time.Since(startAt) / time.Millisecond)
-	Debugf("Connect %v proxy %v (%vms)", targetAddr, ssAddr, latency)
+	Debugf("Connect %v proxy %v (%vms)", targetAddr, server, latency)
 
 	connTrack := &ConnTrack{
 		LocalLocalAddr:   conn.(*net.TCPConn).LocalAddr().String(),

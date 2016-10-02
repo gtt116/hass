@@ -66,7 +66,7 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 	defer ssConn.Close()
 
 	latency := int64(time.Since(startAt) / time.Millisecond)
-	Debugf("Connect %v proxy %v (%vms)", targetAddr, server, latency)
+	Debugf("Proxy %v => %v (%vms)", server, targetAddr, latency)
 
 	connTrack := &ConnTrack{
 		LocalLocalAddr:   conn.(*net.TCPConn).LocalAddr().String(),
@@ -113,6 +113,7 @@ func main() {
 	}
 	config.Report()
 
+	Setrlimit()
 	InitBackend(config)
 
 	proxy := NewProxyer(config)

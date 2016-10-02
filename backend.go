@@ -124,7 +124,6 @@ func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backen
 			return nil, nil, err
 		}
 
-		Debugf("Connecting backend: %v", addr)
 		ssConn, err := ss.Dial(target.Addr(), addr, backend.Cipher())
 		if err != nil {
 			backendRing = backendRing.RemoveNode(addr)

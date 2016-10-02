@@ -87,6 +87,10 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 	inChan := make(chan int64, 1)
 	outChan := make(chan int64, 1)
 
+	if tgt.request != nil {
+		tgt.request.Write(ssConn)
+	}
+
 	go CopyNetIO(ssConn, conn, inChan, "client => shawdowsocks", timeout)
 	go CopyNetIO(conn, ssConn, outChan, "shawdowsocks => client", timeout)
 
@@ -123,6 +127,14 @@ func main() {
 	}
 	go admin.StartSampling()
 	go admin.ServeHTTP()
+
+	httpp := &HTTPProxy{
+		IPAddr:  config.Local.Host,
+		Port:    config.Local.HttpPort,
+		Handler: proxy.DoProxy,
+	}
+
+	go httpp.Serve()
 
 	socks := &Socks5{
 		Ipaddr:  config.Local.Host,

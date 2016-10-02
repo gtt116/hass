@@ -6,11 +6,13 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"time"
 )
 
 const (
 	OneTimeAuthMask byte = 0x10
 	AddrMask        byte = 0xf
+	ConnTimeout          = 3
 )
 
 type Conn struct {
@@ -59,7 +61,7 @@ func RawAddr(addr string) (buf []byte, err error) {
 // rawaddr shoud contain part of the data in socks request, starting from the
 // ATYP field. (Refer to rfc1928 for more information.)
 func DialWithRawAddr(rawaddr []byte, server string, cipher *Cipher) (c *Conn, err error) {
-	conn, err := net.Dial("tcp", server)
+	conn, err := net.DialTimeout("tcp", server, time.Duration(ConnTimeout)*time.Second)
 	if err != nil {
 		return
 	}

@@ -1,7 +1,7 @@
 all: win linux
 
 win:
-	GOOS=windows GOARCH=amd64 go build
+	GOOS=windows go build
 
 linux:
 	go build

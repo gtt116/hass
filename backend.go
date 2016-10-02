@@ -11,15 +11,17 @@ import (
 	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
 )
 
-const (
-	DefaultWeight = 100
+var (
+	// key is shawdowsocks server addr like "192.2.2.2:8080"
+	backends = make(map[string]*Backend)
+
+	// For GetBackendByURI
+	backendRing *hashring.HashRing
+
+	// Errors
+	ErrNoAvailableServer = errors.New("No available server")
+	ErrRingNotInit       = errors.New("Hash Ring not init")
 )
-
-// key is shawdowsocks server addr like "192.2.2.2:8080"
-var backends = make(map[string]*Backend)
-
-// For GetBackendByURI
-var backendRing *hashring.HashRing
 
 type Backend struct {
 	addr   string // id
@@ -72,7 +74,7 @@ func (b *Backend) Cipher() *ss.Cipher {
 	return b.cipher.Copy()
 }
 
-func InitBackend(cfg *Config) error {
+func ConfigBackend(cfg *Config) error {
 	for _, server := range cfg.Backend.Servers {
 		err := AddBackend(server.IP, server.Port, server.Method, server.Password)
 		if err != nil {
@@ -80,12 +82,7 @@ func InitBackend(cfg *Config) error {
 		}
 	}
 
-	hosts := backendKeys()
-	hostWeights := make(map[string]int, len(hosts))
-	for _, host := range hosts {
-		hostWeights[host] = DefaultWeight
-	}
-	backendRing = hashring.NewWithWeights(hostWeights)
+	initHashRing()
 	return nil
 }
 
@@ -104,6 +101,11 @@ func AddBackend(host string, port int, method string, password string) (err erro
 	return nil
 }
 
+func initHashRing() {
+	hosts := backendKeys()
+	backendRing = hashring.New(hosts)
+}
+
 func backendKeys() []string {
 	backendLen := len(backends)
 	keys := make([]string, backendLen)
@@ -115,10 +117,12 @@ func backendKeys() []string {
 	return keys
 }
 
-// Retry until find an available connecton. The caller should close the
-// connection.
+/*
+ Retry until find an available connecton. The caller should close the
+ connection.
+*/
 func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
-	for {
+	for i := 0; i < 3; i++ {
 		addr, backend, err := ChoiceBackend(config, target)
 		if err != nil {
 			return nil, nil, err
@@ -128,21 +132,22 @@ func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backen
 		if err != nil {
 			backendRing = backendRing.RemoveNode(addr)
 			backend.AddErr()
-			Debugf("Removing backend %v for reason: %v", addr, err)
+			Debugf("Proxy %v failed, retrying. [%v]", addr, err)
 			continue
 		}
 		return ssConn, backend, nil
 	}
+	return nil, nil, ErrNoAvailableServer
 }
 
 // Choice the correct backend by algorithms specified in config file.
-// weight down the server which Dial() failed.
 func ChoiceBackend(config *Config, target *Target) (addr string, backend *Backend, err error) {
 	const (
 		Random    = "random"
 		Url       = "url_hash"
 		LeaseConn = "lease_conn"
 	)
+
 	switch config.Backend.Balance {
 	case Random:
 		return GetBackendRandom()
@@ -172,13 +177,18 @@ func GetBackendRandom() (addr string, backend *Backend, err error) {
 */
 func GetBackendByURI(url string) (addr string, backend *Backend, err error) {
 	if backendRing == nil {
-		return "", nil, errors.New("backendRing not init.")
+		return "", nil, ErrRingNotInit
 	}
 
-	key, ok := backendRing.GetNode(url)
-	if !ok || key == "" {
-		return "", nil, errors.New("No sensable server")
+	for i := 0; i < 2; i++ {
+		key, ok := backendRing.GetNode(url)
+		if !ok || key == "" {
+			// ErrNoAvailableServer, re-think all servers as available.
+			Debugf("No available servers, restore all servers (%v)", i)
+			initHashRing()
+		} else {
+			return key, backends[key], nil
+		}
 	}
-
-	return key, backends[key], nil
+	return "", nil, ErrNoAvailableServer
 }

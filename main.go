@@ -114,7 +114,7 @@ func main() {
 	config.Report()
 
 	Setrlimit()
-	InitBackend(config)
+	ConfigBackend(config)
 
 	proxy := NewProxyer(config)
 	admin := &ProxyAdmin{

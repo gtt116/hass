@@ -78,7 +78,7 @@ func ConfigBackend(cfg *Config) error {
 	for _, server := range cfg.Backend.Servers {
 		err := AddBackend(server.IP, server.Port, server.Method, server.Password)
 		if err != nil {
-			Debugf("Init backend see failed: %v", err)
+			Errorf("Init backend see failed: %v", err)
 		}
 	}
 
@@ -132,7 +132,7 @@ func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backen
 		if err != nil {
 			backendRing = backendRing.RemoveNode(addr)
 			backend.AddErr()
-			Debugf("Proxy %v failed, retrying. [%v]", addr, err)
+			Errorf("Proxy %v failed, conn: %v, reason: [%v]", addr, backend.ConnCountCur, err)
 			continue
 		}
 		return ssConn, backend, nil

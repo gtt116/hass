@@ -5,15 +5,29 @@ import (
 	"os"
 )
 
+var DEBUG = 0
+var ERROR = 10
+
+// default level is ERROR
+var logLevel = ERROR
+
 var LOG = log.New(os.Stdout, "[DEBUG] ", log.Ltime)
 var ERR = log.New(os.Stdout, "[ERROR] ", log.Ltime)
 
+func SetLogLevel(level int) {
+	logLevel = level
+}
+
 func Debugln(args ...interface{}) {
-	LOG.Println(args...)
+	if logLevel == DEBUG {
+		LOG.Println(args...)
+	}
 }
 
 func Debugf(format string, args ...interface{}) {
-	LOG.Printf(format, args...)
+	if logLevel == DEBUG {
+		LOG.Printf(format, args...)
+	}
 }
 
 func Fatalln(args ...interface{}) {

@@ -1,8 +1,8 @@
 package main
 
 import (
+	"flag"
 	"net"
-	"os"
 	"sync"
 	"time"
 )
@@ -107,11 +107,15 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		Fatalln("Usage: %v yamlfile", os.Args[0])
+	configFile := flag.String("config", "hass.yaml", "Hass default config file (yaml)")
+	verbose := flag.Bool("verbose", false, "Default logging level is ERROR, change to DEBUG.")
+	flag.Parse()
+
+	if *verbose {
+		SetLogLevel(DEBUG)
 	}
 
-	config, err := ParseConfigFile(os.Args[1])
+	config, err := ParseConfigFile(*configFile)
 	if err != nil {
 		Fatalln("Parse config file failed: ", err)
 	}

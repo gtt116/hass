@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Hass - setting</title>
+	<link href="//cdn.bootcss.com/pure/0.6.0/pure-min.css" rel="stylesheet">
+	<link href="/hass.css" rel="stylesheet">
+</head>
+<body>
+
+	<div id="nav">
+		<div class="pure-g container">
+			<div id="logo" class="pure-u-1-5">
+				<a href="/">Hass</a>
+			</div>
+			<div id="title" class="pure-u-1-5">Setting</div>
+			<div id="navbar" class="pure-u-3-5">
+				<ul>
+					<li><a href="#">status</a></li>
+					<li><a href="#">settting</a></li>
+				</ul>
+			</div>
+		</div>
+	</div><!--nav-->
+
+	<div id="content" class="container">
+		<div id="basic">
+			<h2>基本设置</h2>
+			<form class="pure-form pure-form-aligned">
+				<fieldset>
+					<div class="pure-control-group">
+						<label>管理端口</label>
+						<input type="text" name="" placeholder="7777">
+					</div>
+				</fieldset>
+				<fieldset>
+					<div class="pure-control-group">
+						<label>http 代理端口</label>
+						<input type="text" name="" placeholder="7071">
+					</div>
+				</fieldset>
+				<fieldset>
+					<div class="pure-control-group">
+						<label>socks5 端口</label>
+						<input type="text" name="" placeholder="7072">
+					</div>
+				</fieldset>
+			</form>
+		</div>
+
+		<div>
+			<h2>服务器设置</h2>
+			<form class="pure-form pure-form-aligned">
+				<fieldset>
+					<div class="pure-control-group">
+						<label>默认端口</label>
+						<input type="text" name="" placeholder="57523">
+					</div>
+				</fieldset>
+				<fieldset>
+					<div class="pure-control-group">
+						<label>默认密码</label>
+						<input type="password" name="" placeholder="123456">
+					</div>
+				</fieldset>
+				<fieldset>
+					<div class="pure-control-group">
+						<label>默认加密方法</label>
+						<select>
+							<option value="rc-md5">rc-md5</option>
+						</select>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+
+		<div>
+			<h2>服务器列表</h2>
+			<form class="pure-form">
+				<table class="pure-table pure-table-horizontal table-full">
+					<thead>
+						<tr>
+							<th>IP 地址</th>
+							<th>端口</th>
+							<th>密码</th>
+							<th>加密方法</th>
+							<th>操作</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<input type="text" name="" value="192.168.1.1">
+							</td>
+							<td>
+								<input type="text" name="" placeholder="留空则使用默认端口">
+							</td>
+							<td>
+								<input type="text" name="" placeholder="留空则使用默认密码">
+							</td>
+							<td>
+								<select>
+									<option value="rc-md5">rc-md5</option>
+								</select>
+							</td>
+							<td>
+								<a href="#">ping</a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="text" name="" value="192.168.1.1">
+							</td>
+							<td>
+								<input type="text" name="" placeholder="留空则使用默认端口">
+							</td>
+							<td>
+								<input type="text" name="" placeholder="留空则使用默认密码">
+							</td>
+							<td>
+								<select>
+									<option value="rc-md5">rc-md5</option>
+								</select>
+							</td>
+							<td>
+								<a href="#">ping</a>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<input type="text" name="" value="192.168.1.1">
+							</td>
+							<td>
+								<input type="text" name="" placeholder="留空则使用默认端口">
+							</td>
+							<td>
+								<input type="text" name="" placeholder="留空则使用默认密码">
+							</td>
+							<td>
+								<select>
+									<option value="rc-md5">rc-md5</option>
+								</select>
+							</td>
+							<td>
+								<a href="#">ping</a>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</form>
+			<br/>
+			<a href="#">+ &nbsp新增服务器</a>
+
+			<div id="action">
+				<button class="pure-button pure-button-primary">检查</button>
+				<button class="pure-button pure-button-primary">保存</button>
+				<button class="pure-button">取消</button>
+			</div>
+		</div>
+	</div><!--content-->
+
+
+
+	<div id="footer" class="container">
+		&copy 2016 - <a href="https://github.com/gtt116/hass">hass</a>
+	</div>
+
+</body>
+</html>

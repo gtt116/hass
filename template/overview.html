@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Hass - overview</title>
+	<link href="//cdn.bootcss.com/pure/0.6.0/pure-min.css" rel="stylesheet">
+	<link href="/hass.css" rel="stylesheet">
+</head>
+<body>
+
+	<div id="nav">
+		<div class="pure-g container">
+			<div id="logo" class="pure-u-1-5">
+				<a href="/">Hass</a>
+			</div>
+			<div id="title" class="pure-u-1-5">Overview</div>
+			<div id="navbar" class="pure-u-3-5">
+				<ul>
+					<li><a href="#">status</a></li>
+					<li><a href="#">settting</a></li>
+				</ul>
+			</div>
+		</div>
+	</div><!--nav-->
+
+	<div id="content" class="container">
+		<button class="pure-button pure-button-primary" id="refresh">刷新</button>
+		<div>
+			<h2>总览</h2>
+			<div class="panel">
+				<div class="upper">100</div>
+				<div class="down">当前连接数</div>
+			</div>
+			<div class="panel">
+				<div class="upper">1/3</div>
+				<div class="down">服务器</div>
+			</div>
+			<div class="panel">
+				<div class="upper">200MB</div>
+				<div class="down">流入</div>
+			</div>
+			<div class="panel">
+				<div class="upper">300MB</div>
+				<div class="down">流出</div>
+			</div>
+		</div>
+
+		<div>
+			<h2>服务器状态</h2>
+			<table class="pure-table pure-table-horizontal table-full">
+				<thead>
+					<tr>
+						<th>IP</th>
+						<th>当前状态</th>
+						<th>平均响应时间</th>
+						<th>当前连接数</th>
+						<th>失败连接数</th>
+						<th>流入流量</th>
+						<th>流出流量</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>188.42.254.18</td>
+						<td><span class="green">正常</span></td>
+						<td><span class="green">30 ms</span></td>
+						<td>1</td>
+						<td>1</td>
+						<td>10 MB</td>
+						<td>200 MB</td>
+						<td><a href="#">停用</a></td>
+					</tr>
+					<tr>
+						<td>192.168.1.2</td>
+						<td><span class="green">正常</span></td>
+						<td><span class="green">30 ms</span></td>
+						<td>1</td>
+						<td>1</td>
+						<td>10 MB</td>
+						<td>200 MB</td>
+						<td><a href="#">停用</a></td>
+					</tr>
+					<tr class="gray">
+						<td>192.168.1.2</td>
+						<td><span class="green">正常</span></td>
+						<td><span class="green">30 ms</span></td>
+						<td>1</td>
+						<td>1</td>
+						<td>10 MB</td>
+						<td>200 MB</td>
+						<td><a href="#">启用</a></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<div>
+			<h2>连接状态</h2>
+			<table class="pure-table pure-table-horizontal table-full">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>客户端</th>
+						<th>服务端</th>
+						<th>目标</th>
+						<th>响应时间</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>1000</td>
+						<td>127.0.01:61158</td>
+						<td>188.42.1232.19:41231</td>
+						<td>www.google.com:443</td>
+						<td>1000 ms</td>
+					</tr>
+					<tr>
+						<td>1000</td>
+						<td>127.0.01:61158</td>
+						<td>188.42.1232.19:41231</td>
+						<td>www.google.com:443</td>
+						<td>1000 ms</td>
+					</tr>
+					<tr>
+						<td>1000</td>
+						<td>127.0.01:61158</td>
+						<td>188.42.1232.19:41231</td>
+						<td>www.google.com:443</td>
+						<td>1000 ms</td>
+					</tr>
+					<tr>
+						<td>1000</td>
+						<td>127.0.01:61158</td>
+						<td>188.42.1232.19:41231</td>
+						<td>www.google.com:443</td>
+						<td>1000 ms</td>
+					</tr>
+
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<div id="footer" class="container">
+	&copy 2016 - <a href="https://github.com/gtt116/hass">hass</a>
+	</div>
+
+</body>
+</html>

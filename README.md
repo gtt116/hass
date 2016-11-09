@@ -2,14 +2,13 @@
 
 [haes:]
 
-Like haproxy, hass is used to distrubute requests to multiple shadowsocks backends by some balance algorithms.
+Like haproxy, hass is used to distribute requests to multiple shadowsocks backends by intelligent algorithms.
 
 ## Main features
 
 * Speak HTTP and sock5 protocol
-* Support multiple balance algorithms(url_hash, random, etc)
 * Support web based management and statictis
-* Support automatic weight backends by network latency. (TODO)
+* url persistent and lease connection first distribution.
 
 ## Demo
 

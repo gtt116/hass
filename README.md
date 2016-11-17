@@ -16,3 +16,4 @@ Like haproxy, hass is used to distrubute requests to multiple shadowsocks backen
 The admin web page look like:
 
 ![admin web](https://raw.githubusercontent.com/gtt116/hass/master/doc/hass.png)
+

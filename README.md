@@ -16,3 +16,10 @@ The admin web page look like:
 
 ![admin web](https://raw.githubusercontent.com/gtt116/hass/master/doc/hass.png)
 
+
+## Build
+
+if `govendor` do not existed, install it by `go get -u github.com/kardianos/govendor`, then
+```
+govendor build
+```

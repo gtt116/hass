@@ -16,7 +16,10 @@ type HTTPProxy struct {
 func (self *HTTPProxy) Serve() error {
 	listenAddr := self.IPAddr + ":" + strconv.Itoa(self.Port)
 	log.Infof("HTTP proxy listen at: %v", listenAddr)
-	http.ListenAndServe(listenAddr, self)
+	err := http.ListenAndServe(listenAddr, self)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	return nil
 }
 

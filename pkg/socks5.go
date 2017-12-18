@@ -37,6 +37,7 @@ func (s *Socks5) Serve() error {
 	listenAddr := s.Ipaddr + ":" + strconv.Itoa(s.Port)
 	listen, err := net.Listen("tcp", listenAddr)
 	if err != nil {
+		log.Fatalln(err)
 		return err
 	}
 	log.Infof("Socks5 listen at: %v", listenAddr)

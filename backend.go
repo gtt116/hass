@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gtt116/hass/log"
 	"github.com/serialx/hashring"
 	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
 )
@@ -78,7 +79,7 @@ func ConfigBackend(cfg *Config) error {
 	for _, server := range cfg.Backend.Servers {
 		err := AddBackend(server.IP, server.Port, server.Method, server.Password)
 		if err != nil {
-			Errorf("Init backend see failed: %v", err)
+			log.Errorf("Init backend see failed: %v", err)
 		}
 	}
 
@@ -97,7 +98,7 @@ func AddBackend(host string, port int, method string, password string) (err erro
 	backend := &Backend{addr: addr, cipher: cipher}
 	backends[addr] = backend
 
-	Debugln("Add backend:", addr)
+	log.Debugln("Add backend:", addr)
 	return nil
 }
 
@@ -132,7 +133,7 @@ func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backen
 		if err != nil {
 			backendRing = backendRing.RemoveNode(addr)
 			backend.AddErr()
-			Errorf("Proxy %v failed, conn: %v, reason: [%v]", addr, backend.ConnCountCur, err)
+			log.Errorf("Proxy %v failed, conn: %v, reason: [%v]", addr, backend.ConnCountCur, err)
 			continue
 		}
 		return ssConn, backend, nil
@@ -184,7 +185,7 @@ func GetBackendByURI(url string) (addr string, backend *Backend, err error) {
 		key, ok := backendRing.GetNode(url)
 		if !ok || key == "" {
 			// ErrNoAvailableServer, re-think all servers as available.
-			Debugf("No available servers, restore all servers (%v)", i)
+			log.Debugf("No available servers, restore all servers (%v)", i)
 			initHashRing()
 		} else {
 			return key, backends[key], nil

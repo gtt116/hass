@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gtt116/hass/log"
 	"github.com/gtt116/hass/rlimit"
 )
 
@@ -68,7 +69,7 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 	defer ssConn.Close()
 
 	latency := int64(time.Since(startAt) / time.Millisecond)
-	Debugf("Proxy %v => %v (%vms)", server, targetAddr, latency)
+	log.Debugf("Proxy %v => %v (%vms)", server, targetAddr, latency)
 
 	connTrack := &ConnTrack{
 		LocalLocalAddr:   conn.(*net.TCPConn).LocalAddr().String(),
@@ -114,12 +115,12 @@ func main() {
 	flag.Parse()
 
 	if *verbose {
-		EnableDebug()
+		log.EnableDebug()
 	}
 
 	config, err := ParseConfigFile(*configFile)
 	if err != nil {
-		Fatalln("Parse config file failed: ", err)
+		log.Fatalln("Parse config file failed: ", err)
 	}
 	config.Report()
 

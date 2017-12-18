@@ -5,6 +5,8 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	"github.com/gtt116/hass/log"
 )
 
 func TimeAfter(timeout int) time.Time {
@@ -20,10 +22,10 @@ func CopyNetIO(dst net.Conn, src net.Conn, byteCh chan int64, msg string, timeou
 		if nerr, ok := err.(net.Error); ok {
 			if !nerr.Timeout() && !strings.Contains(nerr.Error(), "use of closed network connection") {
 				// ignore i/o timeout error, and errClosing
-				Errorf("net.Error %v : %v", msg, nerr)
+				log.Errorf("net.Error %v : %v", msg, nerr)
 			}
 		} else {
-			Errorf("Error %v: %v", msg, err)
+			log.Errorf("Error %v: %v", msg, err)
 		}
 	}
 	byteCh <- written

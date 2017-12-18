@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gtt116/hass/log"
 )
 
 const (
@@ -77,12 +79,12 @@ func (s *Socks5) Serve() error {
 	if err != nil {
 		return err
 	}
-	Infof("Socks5 listen at: %v", listenAddr)
+	log.Infof("Socks5 listen at: %v", listenAddr)
 
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
-			Debugln("Accept error", err)
+			log.Debugln("Accept error", err)
 		}
 		go s.serveConnection(conn)
 	}
@@ -96,18 +98,18 @@ func (s *Socks5) serveConnection(conn net.Conn) error {
 
 	err = s.negotiationAuth(bufConn, conn)
 	if err != nil {
-		Debugln("Negotiation failed", err)
+		log.Debugln("Negotiation failed", err)
 		return err
 	}
 
 	target, err := s.parseTarget(bufConn, conn)
 	if err != nil {
-		Debugln("Get request failed", err)
+		log.Debugln("Get request failed", err)
 		return err
 	}
 
 	if err = s.sendReply(conn); err != nil {
-		Debugln("Send reply failed", err)
+		log.Debugln("Send reply failed", err)
 		return err
 	}
 
@@ -118,7 +120,7 @@ func (s *Socks5) serveConnection(conn net.Conn) error {
 	}
 
 	if err != nil {
-		Debugln("Handler request failed", err)
+		log.Debugln("Handler request failed", err)
 	}
 
 	return nil
@@ -269,7 +271,7 @@ func (s *Socks5) handleRequest(target *Target, conn net.Conn) error {
 	if err != nil {
 		return err
 	}
-	Debugf("Proxy %v (%v)", targetAddr, time.Since(startAt))
+	log.Debugf("Proxy %v (%v)", targetAddr, time.Since(startAt))
 
 	errChan := make(chan error, 2)
 
@@ -319,7 +321,7 @@ func CopyIO(dst io.Writer, src io.Reader, errCh chan error) {
 		tcpConn.CloseWrite()
 	}
 	if err != nil {
-		Debugf("Error on copy %v, err: %v", err)
+		log.Debugf("Error on copy %v, err: %v", err)
 	}
 	errCh <- err
 }

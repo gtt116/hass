@@ -1,4 +1,4 @@
-package main
+package log
 
 import (
 	"github.com/op/go-logging"

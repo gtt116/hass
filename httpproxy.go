@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 	"strconv"
+
+	"github.com/gtt116/hass/log"
 )
 
 type HTTPProxy struct {
@@ -13,13 +15,13 @@ type HTTPProxy struct {
 
 func (self *HTTPProxy) Serve() error {
 	listenAddr := self.IPAddr + ":" + strconv.Itoa(self.Port)
-	Infof("HTTP proxy listen at: %v", listenAddr)
+	log.Infof("HTTP proxy listen at: %v", listenAddr)
 	http.ListenAndServe(listenAddr, self)
 	return nil
 }
 
 func (self *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	Debugf("HTTP %v %v\n", r.Method, r.Host)
+	log.Debugf("HTTP %v %v\n", r.Method, r.Host)
 
 	hj, ok := w.(http.Hijacker)
 	if !ok {
@@ -38,7 +40,7 @@ func (self *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		conn.Write([]byte("HTTP/1.0 200 OK\r\n\r\n"))
 		target, err = NewTarget(r.Host)
 		if err != nil {
-			Debugf("%v\n", err)
+			log.Debugf("%v\n", err)
 		}
 	} else {
 		r.Header.Del("Proxy-Connection")
@@ -54,12 +56,12 @@ func (self *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		target, err = NewTarget(r.Host)
 		if err != nil {
-			Debugf("%v\n", err)
+			log.Debugf("%v\n", err)
 		}
 		target.request = r
 	}
 
 	if err := self.Handler(target, conn); err != nil {
-		Debugf("HTTP Proxy CONNECT failed: %v", err)
+		log.Debugf("HTTP Proxy CONNECT failed: %v", err)
 	}
 }

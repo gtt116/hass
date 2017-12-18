@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gtt116/hass/log"
 )
 
 func ByteSize(args ...interface{}) string {
@@ -70,7 +72,7 @@ func (adm *ProxyAdmin) httpHandler(w http.ResponseWriter, r *http.Request) {
 
 	tpl, err := tpl.Parse(HTML)
 	if err != nil {
-		Debugln("Parse template failed:", err)
+		log.Debugln("Parse template failed:", err)
 	}
 
 	// Get latest backends
@@ -78,7 +80,7 @@ func (adm *ProxyAdmin) httpHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = tpl.Execute(w, adm)
 	if err != nil {
-		Debugln("Execute template failed:", err)
+		log.Debugln("Execute template failed:", err)
 	}
 }
 
@@ -88,10 +90,10 @@ func (adm *ProxyAdmin) ServeHTTP() {
 
 	addr := net.JoinHostPort(adm.cfg.Local.Host, strconv.Itoa(adm.cfg.Local.AdminPort))
 
-	Infoln("Admin listen at:", addr)
+	log.Infoln("Admin listen at:", addr)
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
-		Fatalln("HTTP failed:", err)
+		log.Fatalln("HTTP failed:", err)
 	}
 }
 

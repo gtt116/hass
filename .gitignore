@@ -3,3 +3,6 @@ etc/hass.yaml
 .ropeproject/
 hass.yaml
 cmd/hass/hass
+hass
+hass.exe
+hass_mac

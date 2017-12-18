@@ -19,6 +19,15 @@ The admin web page look like:
 
 ## Build
 
+```
+git clone http://github.com/gtt116/hass
+make
+```
+
+These commands will result in 3 executable file: hass, hass_mac, hass.exe
+
+## Develop
+
 if `govendor` do not existed, install it by `go get -u github.com/kardianos/govendor`, then
 ```
 govendor build

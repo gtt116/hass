@@ -142,6 +142,7 @@ func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backen
 }
 
 // Choice the correct backend by algorithms specified in config file.
+// Returns the best backend server's address and a Backend object.
 func ChoiceBackend(config *Config, target *Target) (addr string, backend *Backend, err error) {
 	const (
 		Random    = "random"

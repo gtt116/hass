@@ -8,9 +8,9 @@ import (
 )
 
 type HTTPProxy struct {
-	IPAddr  string
-	Port    int
-	Handler DoProxy
+	IPAddr string
+	Port   int
+	Proxy
 }
 
 func (self *HTTPProxy) Serve() error {
@@ -38,7 +38,7 @@ func (self *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "CONNECT" {
 		conn.Write([]byte("HTTP/1.0 200 OK\r\n\r\n"))
-		target, err = NewTarget(r.Host)
+		target, err = NewTarget(r.Host, conn)
 		if err != nil {
 			log.Debugf("%v\n", err)
 		}
@@ -54,14 +54,16 @@ func (self *HTTPProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		//   be communicated by proxies over further connections.
 		r.Header.Del("Connection")
 
-		target, err = NewTarget(r.Host)
+		target, err = NewTarget(r.Host, conn)
 		if err != nil {
 			log.Debugf("%v\n", err)
 		}
-		target.request = r
+
+		// To proxy old http request, we need the raw request object.
+		target.req = r
 	}
 
-	if err := self.Handler(target, conn); err != nil {
+	if err := self.Proxy.DoProxy(target); err != nil {
 		log.Debugf("HTTP Proxy CONNECT failed: %v", err)
 	}
 }

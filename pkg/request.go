@@ -9,17 +9,21 @@ import (
 
 // A target contains all the information of a request.
 type Target struct {
-	Host    string // maybe IP or FQDN
-	Port    int
-	request *http.Request // only used by HTTP proxy
+	// maybe IP or FQDN
+	Host string
+
+	// request server's port, mostly is 80
+	Port int
+
+	// Connection from client
+	Client net.Conn
+
+	// Only for httpproxy, I don't know how to make response directly to Client
+	req *http.Request
 }
 
-func (t *Target) Addr() string {
-	return net.JoinHostPort(t.Host, strconv.Itoa(t.Port))
-}
-
-// parse a "host:port" into a Target object
-func NewTarget(hostStr string) (*Target, error) {
+// Parsing a "host:port" into a Target object
+func NewTarget(hostStr string, client net.Conn) (*Target, error) {
 	t := &Target{}
 
 	var (
@@ -40,6 +44,11 @@ func NewTarget(hostStr string) (*Target, error) {
 
 	t.Host = parts[0]
 	t.Port = port
+	t.Client = client
 
 	return t, nil
+}
+
+func (t *Target) Addr() string {
+	return net.JoinHostPort(t.Host, strconv.Itoa(t.Port))
 }

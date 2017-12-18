@@ -23,12 +23,10 @@ const (
 	ipv6Address = uint8(4)
 )
 
-type DoProxy func(target *Target, conn net.Conn) error
-
 type Socks5 struct {
-	Ipaddr  string
-	Port    int
-	Handler DoProxy
+	Ipaddr string
+	Port   int
+	Proxy
 }
 
 func (s *Socks5) log(msg string) {
@@ -64,7 +62,7 @@ func (s *Socks5) serveConnection(conn net.Conn) error {
 		return err
 	}
 
-	target, err := s.parseTarget(bufConn, conn)
+	target, err := s.createTarget(bufConn, conn)
 	if err != nil {
 		log.Debugln("Get request failed", err)
 		return err
@@ -75,10 +73,10 @@ func (s *Socks5) serveConnection(conn net.Conn) error {
 		return err
 	}
 
-	if s.Handler != nil {
-		err = s.Handler(target, conn)
+	if s.Proxy != nil {
+		err = s.Proxy.DoProxy(target)
 	} else {
-		err = s.handleRequest(target, conn)
+		err = s.rawProxy(target)
 	}
 
 	if err != nil {
@@ -160,7 +158,7 @@ The request frame:
 	+----+-----+-------+------+----------+----------+
 
 */
-func (s *Socks5) parseTarget(bufConn io.Reader, conn net.Conn) (target *Target, err error) {
+func (s *Socks5) createTarget(bufConn io.Reader, conn net.Conn) (target *Target, err error) {
 
 	header := []byte{0, 0, 0, 0}
 	if _, err := io.ReadAtLeast(bufConn, header, len(header)); err != nil {
@@ -181,6 +179,7 @@ func (s *Socks5) parseTarget(bufConn io.Reader, conn net.Conn) (target *Target, 
 	}
 
 	target = &Target{}
+	target.Client = conn
 
 	switch header[3] {
 	case ipv4Address:
@@ -224,7 +223,7 @@ func (s *Socks5) parseTarget(bufConn io.Reader, conn net.Conn) (target *Target, 
 }
 
 // This is how the original socks5 server will do proxying
-func (s *Socks5) handleRequest(target *Target, conn net.Conn) error {
+func (s *Socks5) rawProxy(target *Target) error {
 
 	targetAddr := target.Addr()
 
@@ -237,8 +236,8 @@ func (s *Socks5) handleRequest(target *Target, conn net.Conn) error {
 
 	errChan := make(chan error, 2)
 
-	go CopyIO(conn, proxyConn, errChan)
-	go CopyIO(proxyConn, conn, errChan)
+	go CopyIO(target.Client, proxyConn, errChan)
+	go CopyIO(proxyConn, target.Client, errChan)
 
 	for i := 0; i < 2; i++ {
 		e := <-errChan

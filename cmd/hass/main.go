@@ -33,17 +33,17 @@ func main() {
 	go admin.ServeHTTP()
 
 	httpp := &pkg.HTTPProxy{
-		IPAddr:  config.Local.Host,
-		Port:    config.Local.HttpPort,
-		Handler: proxy.DoProxy,
+		IPAddr: config.Local.Host,
+		Port:   config.Local.HttpPort,
+		Proxy:  proxy,
 	}
 
 	go httpp.Serve()
 
 	socks := &pkg.Socks5{
-		Ipaddr:  config.Local.Host,
-		Port:    config.Local.SocksPort,
-		Handler: proxy.DoProxy,
+		Ipaddr: config.Local.Host,
+		Port:   config.Local.SocksPort,
+		Proxy:  proxy,
 	}
 
 	socks.Serve()

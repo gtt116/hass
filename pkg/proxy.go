@@ -17,6 +17,12 @@ type ConnTrack struct {
 	Latency          int64
 }
 
+type Proxy interface {
+	DoProxy(target *Target) error
+}
+
+// Proxyer implement interface Proxy
+// TODO: think about better name for it.
 type Proxyer struct {
 	cfg        *Config
 	lock       *sync.Mutex
@@ -55,10 +61,10 @@ func (p *Proxyer) popConnPair(connId int) {
 
 // Hass's version of socks5 server:
 // pick up a backend shadowsocks server then pipe source and server.
-func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
-
-	startAt := time.Now()
+func (p *Proxyer) DoProxy(tgt *Target) error {
+	conn := tgt.Client
 	targetAddr := tgt.Addr()
+	startAt := time.Now()
 
 	ssConn, server, err := ConnBackend(p.cfg, tgt)
 	if err != nil {
@@ -80,6 +86,11 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 	connId := p.pushConnPair(connTrack)
 	defer p.popConnPair(connId)
 
+	// Maybe I can think about a way to make a valid request by my self :P
+	if tgt.req != nil {
+		tgt.req.Write(ssConn)
+	}
+
 	server.IncreseConnCount()
 	defer server.DecreseConnCount()
 
@@ -87,10 +98,6 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 
 	inChan := make(chan int64, 1)
 	outChan := make(chan int64, 1)
-
-	if tgt.request != nil {
-		tgt.request.Write(ssConn)
-	}
 
 	go CopyNetIO(ssConn, conn, inChan, "client => shawdowsocks", timeout)
 	go CopyNetIO(conn, ssConn, outChan, "shawdowsocks => client", timeout)

@@ -114,7 +114,7 @@ func main() {
 	flag.Parse()
 
 	if *verbose {
-		SetLogLevel(DEBUG)
+		EnableDebug()
 	}
 
 	config, err := ParseConfigFile(*configFile)

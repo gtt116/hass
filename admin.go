@@ -88,7 +88,7 @@ func (adm *ProxyAdmin) ServeHTTP() {
 
 	addr := net.JoinHostPort(adm.cfg.Local.Host, strconv.Itoa(adm.cfg.Local.AdminPort))
 
-	Debugln("Admin listen at:", addr)
+	Infoln("Admin listen at:", addr)
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		Fatalln("HTTP failed:", err)

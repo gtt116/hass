@@ -77,8 +77,7 @@ func (s *Socks5) Serve() error {
 	if err != nil {
 		return err
 	}
-	Debugf("Socks5 listen at: %v", listenAddr)
-	Debugln("=======================================================")
+	Infof("Socks5 listen at: %v", listenAddr)
 
 	for {
 		conn, err := listen.Accept()

@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"fmt"
@@ -64,6 +64,13 @@ type ProxyAdmin struct {
 	sessionRateMax int
 	// sessionTotal = proxy.connTotal
 	// sessionCur = proxy.connCount()
+}
+
+func NewProxyAdmin(cf *Config, p *Proxyer) *ProxyAdmin {
+	return &ProxyAdmin{
+		cfg:   cf,
+		Proxy: p,
+	}
 }
 
 func (adm *ProxyAdmin) httpHandler(w http.ResponseWriter, r *http.Request) {

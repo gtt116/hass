@@ -1,4 +1,4 @@
-package main
+package pkg
 
 const HTML = `
 <!DOCTYPE html>

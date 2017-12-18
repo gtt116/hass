@@ -1,13 +1,11 @@
-package main
+package pkg
 
 import (
-	"flag"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/gtt116/hass/log"
-	"github.com/gtt116/hass/rlimit"
 )
 
 type ConnTrack struct {
@@ -107,47 +105,4 @@ func (p *Proxyer) DoProxy(tgt *Target, conn net.Conn) error {
 	}
 
 	return nil
-}
-
-func main() {
-	configFile := flag.String("config", "hass.yaml", "Hass default config file (yaml)")
-	verbose := flag.Bool("verbose", false, "Default logging level is ERROR, change to DEBUG.")
-	flag.Parse()
-
-	if *verbose {
-		log.EnableDebug()
-	}
-
-	config, err := ParseConfigFile(*configFile)
-	if err != nil {
-		log.Fatalln("Parse config file failed: ", err)
-	}
-	config.Report()
-
-	rlimit.Setrlimit()
-	ConfigBackend(config)
-
-	proxy := NewProxyer(config)
-	admin := &ProxyAdmin{
-		cfg:   config,
-		Proxy: proxy,
-	}
-	go admin.StartSampling()
-	go admin.ServeHTTP()
-
-	httpp := &HTTPProxy{
-		IPAddr:  config.Local.Host,
-		Port:    config.Local.HttpPort,
-		Handler: proxy.DoProxy,
-	}
-
-	go httpp.Serve()
-
-	socks := &Socks5{
-		Ipaddr:  config.Local.Host,
-		Port:    config.Local.SocksPort,
-		Handler: proxy.DoProxy,
-	}
-
-	socks.Serve()
 }

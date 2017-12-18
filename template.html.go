@@ -509,7 +509,7 @@ const HTML = `
 						<td> {{ $server.ConnCountTotal }} </td>
 						<td> {{ $server.ConnCountErr }} </td>
 						<td> {{ $server.InBytes|bytesize }} </td>
-						<td> {{ $server.OutBytes|bytesize }}B </td>
+						<td> {{ $server.OutBytes|bytesize }} </td>
 					</tr>
 				{{ end }}
 				</tbody>

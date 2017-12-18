@@ -118,27 +118,41 @@ func backendKeys() []string {
 	return keys
 }
 
+func connToBackend(target *Target, backend *Backend) (conn net.Conn, err error) {
+	ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
+	if err != nil {
+		return ssConn, nil
+	} else {
+		return nil, ErrNoAvailableServer
+	}
+}
+
+type BackendConn struct {
+	back   *Backend
+	ssConn net.Conn
+}
+
 /*
  Retry until find an available connecton. The caller should close the
  connection.
 */
 func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
-	for i := 0; i < 3; i++ {
-		addr, backend, err := ChoiceBackend(config, target)
-		if err != nil {
-			return nil, nil, err
-		}
+	ch := make(chan *BackendConn)
 
-		ssConn, err := ss.Dial(target.Addr(), addr, backend.Cipher())
-		if err != nil {
-			backendRing = backendRing.RemoveNode(addr)
-			backend.AddErr()
-			log.Errorf("Proxy %v failed, conn: %v, reason: [%v]", addr, backend.ConnCountCur, err)
-			continue
-		}
-		return ssConn, backend, nil
+	for _, backend := range backends {
+		go func() {
+			ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
+			if err == nil {
+				log.Errorf("Connect to: %v, err: %v", backend, err)
+				ch <- &BackendConn{backend, ssConn}
+			} else {
+				log.Errorf("Connect to: %v, err: %v", backend, err)
+			}
+
+		}()
 	}
-	return nil, nil, ErrNoAvailableServer
+	backConn := <-ch
+	return backConn.ssConn, backConn.back, nil
 }
 
 // Choice the correct backend by algorithms specified in config file.

@@ -1,6 +1,7 @@
 // +build windows
 
-package main
+package rlimit
 
 func Setrlimit() {
+	// do nothing on windows
 }

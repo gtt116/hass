@@ -5,6 +5,8 @@ import (
 	"net"
 	"sync"
 	"time"
+
+	"github.com/gtt116/hass/rlimit"
 )
 
 type ConnTrack struct {
@@ -121,7 +123,7 @@ func main() {
 	}
 	config.Report()
 
-	Setrlimit()
+	rlimit.Setrlimit()
 	ConfigBackend(config)
 
 	proxy := NewProxyer(config)

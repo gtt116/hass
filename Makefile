@@ -9,3 +9,6 @@ linux:
 
 mac:
 	GOOS=darwin go build -o hass_mac $(target)
+
+test:
+	go test -v ./pkg/...

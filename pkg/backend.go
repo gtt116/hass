@@ -110,29 +110,19 @@ func (bc *BackendConn) String() string {
 // Connect to a ss server, return BackendConn object and error through channel.
 func connBackend(target *Target, backend *Backend, ch chan *BackendConn) {
 	log.Debugf("Connect ss: %v, request %v", backend, target)
-	// Default timeout is 3 seconds.
+	// dial timeout is 3 seconds.
 	ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
 	ch <- &BackendConn{backend, ssConn, err}
 }
 
-/*
- Retry until find an available connecton. The caller should close the
- connection.
-*/
-func GetConnection(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
-	ch := make(chan *BackendConn)
-
-	for _, backend := range backends {
-		go connBackend(target, backend, ch)
-	}
-
+// Pick up the first connection return through a channel, close the other connections.
+func choiceConnection(conns chan *BackendConn) chan *BackendConn {
 	chConn := make(chan *BackendConn)
-
-	// Pick up the first connection, spawn goroute to clean the others.
 	go func() {
 		fired := false
+
 		for _ = range backends {
-			backConn := <-ch
+			backConn := <-conns
 			if backConn.err == nil {
 				if !fired {
 					chConn <- backConn
@@ -144,6 +134,17 @@ func GetConnection(config *Config, target *Target) (conn net.Conn, backend *Back
 			}
 		}
 	}()
+	return chConn
+}
+
+// Get a connection to a backend server. The caller should close the connection.
+func GetConnection(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
+	ch := make(chan *BackendConn)
+	for _, backend := range backends {
+		go connBackend(target, backend, ch)
+	}
+
+	chConn := choiceConnection(ch)
 
 	select {
 	case backConn := <-chConn:

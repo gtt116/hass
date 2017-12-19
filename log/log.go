@@ -1,16 +1,16 @@
 package log
 
 import (
-	"github.com/op/go-logging"
+	"github.com/gtt116/go-logging"
 )
 
 const (
-	log_name = "hass"
+	log_name = ""
 )
 
 var (
 	log    = logging.MustGetLogger(log_name)
-	format = logging.MustStringFormatter("%{color}%{level:.5s}%{color:reset} %{message}")
+	format = logging.MustStringFormatter("%{color}%{time:2006-01-02T15:04:05Z07:00} %{level:.5s}%{color:reset} %{message}")
 )
 
 func init() {

@@ -9,10 +9,10 @@
 			"revisionTime": "2015-11-07T02:50:05Z"
 		},
 		{
-			"checksumSHA1": "BoXdUBWB8UnSlFlbnuTQaPqfCGk=",
-			"path": "github.com/op/go-logging",
-			"revision": "970db520ece77730c7e4724c61121037378659d9",
-			"revisionTime": "2016-03-15T20:05:05Z"
+			"checksumSHA1": "io4oeRK9Jdz9pWBWBwGgDZTnRfg=",
+			"path": "github.com/gtt116/go-logging",
+			"revision": "fd35d786951018c2824dd6974d0a0ad3ec23da6d",
+			"revisionTime": "2017-12-19T08:29:02Z"
 		},
 		{
 			"checksumSHA1": "oVPHWesOmZ02vLq2fglGvf+AMgk=",

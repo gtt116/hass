@@ -21,10 +21,14 @@ func main() {
 	if err != nil {
 		log.Fatalln("Parse config file failed: ", err)
 	}
-	config.Report()
+
+	log.Infoln("====================> Hass <===========================")
 
 	rlimit.Setrlimit()
-	pkg.ConfigBackend(config)
+	err = pkg.ConfigBackend(config)
+	if err != nil {
+		log.Fatalln("Config backend server failed: ", err)
+	}
 
 	proxy := pkg.NewProxyer(config)
 
@@ -37,7 +41,6 @@ func main() {
 		Port:   config.Local.HttpPort,
 		Proxy:  proxy,
 	}
-
 	go httpp.Serve()
 
 	socks := &pkg.Socks5{
@@ -45,6 +48,5 @@ func main() {
 		Port:   config.Local.SocksPort,
 		Proxy:  proxy,
 	}
-
 	socks.Serve()
 }

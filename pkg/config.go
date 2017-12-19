@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"github.com/gtt116/hass/log"
 	"gopkg.in/yaml.v2"
 )
 
@@ -92,15 +91,4 @@ func ParseConfigFile(path string) (config *Config, err error) {
 	}
 
 	return ParseConfig(data)
-}
-
-func (cfg *Config) Report() {
-	log.Debugln("====================== Local ==========================")
-	log.Debugf("admin_port: %v\n", cfg.Local.AdminPort)
-	log.Debugf("socks_port: %v\n", cfg.Local.SocksPort)
-	log.Debugf("http_port: %v\n", cfg.Local.HttpPort)
-
-	log.Debugln("====================== Backend ==========================")
-	log.Debugf("balance: %v\n", cfg.Backend.Balance)
-	log.Debugf("timeout: %v\n", cfg.Backend.Timeout)
 }

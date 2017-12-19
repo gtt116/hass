@@ -2,22 +2,19 @@ package pkg
 
 import (
 	"errors"
-	"math/rand"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gtt116/hass/log"
-	"github.com/serialx/hashring"
 	ss "github.com/shadowsocks/shadowsocks-go/shadowsocks"
 )
 
 var (
 	// key is shawdowsocks server addr like "192.2.2.2:8080"
 	backends = make(map[string]*Backend)
-
-	// For GetBackendByURI
-	backendRing *hashring.HashRing
 
 	// Errors
 	ErrNoAvailableServer = errors.New("No available server")
@@ -77,17 +74,15 @@ func (b *Backend) Cipher() *ss.Cipher {
 
 func ConfigBackend(cfg *Config) error {
 	for _, server := range cfg.Backend.Servers {
-		err := AddBackend(server.IP, server.Port, server.Method, server.Password)
+		err := addBackend(server.IP, server.Port, server.Method, server.Password)
 		if err != nil {
-			log.Errorf("Init backend see failed: %v", err)
+			return err
 		}
 	}
-
-	initHashRing()
 	return nil
 }
 
-func AddBackend(host string, port int, method string, password string) (err error) {
+func addBackend(host string, port int, method string, password string) (err error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 
 	cipher, err := ss.NewCipher(method, password)
@@ -102,109 +97,62 @@ func AddBackend(host string, port int, method string, password string) (err erro
 	return nil
 }
 
-func initHashRing() {
-	hosts := backendKeys()
-	backendRing = hashring.New(hosts)
-}
-
-func backendKeys() []string {
-	backendLen := len(backends)
-	keys := make([]string, backendLen)
-	i := 0
-	for k := range backends {
-		keys[i] = k
-		i++
-	}
-	return keys
-}
-
-func connToBackend(target *Target, backend *Backend) (conn net.Conn, err error) {
-	ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
-	if err != nil {
-		return ssConn, nil
-	} else {
-		return nil, ErrNoAvailableServer
-	}
-}
-
 type BackendConn struct {
 	back   *Backend
 	ssConn net.Conn
+	err    error
+}
+
+func (bc *BackendConn) String() string {
+	return fmt.Sprintf("%v #%v", bc.back, bc.err)
+}
+
+// Connect to a ss server, return BackendConn object and error through channel.
+func connBackend(target *Target, backend *Backend, ch chan *BackendConn) {
+	log.Debugf("Connect ss: %v, request %v", backend, target)
+	// Default timeout is 3 seconds.
+	ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
+	ch <- &BackendConn{backend, ssConn, err}
 }
 
 /*
  Retry until find an available connecton. The caller should close the
  connection.
 */
-func ConnBackend(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
+func GetConnection(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
 	ch := make(chan *BackendConn)
 
 	for _, backend := range backends {
-		go func() {
-			ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
-			if err == nil {
-				log.Errorf("Connect to: %v, err: %v", backend, err)
-				ch <- &BackendConn{backend, ssConn}
-			} else {
-				log.Errorf("Connect to: %v, err: %v", backend, err)
-			}
-
-		}()
+		go connBackend(target, backend, ch)
 	}
-	backConn := <-ch
-	return backConn.ssConn, backConn.back, nil
-}
 
-// Choice the correct backend by algorithms specified in config file.
-// Returns the best backend server's address and a Backend object.
-func ChoiceBackend(config *Config, target *Target) (addr string, backend *Backend, err error) {
-	const (
-		Random    = "random"
-		Url       = "url_hash"
-		LeaseConn = "lease_conn"
-	)
+	chConn := make(chan *BackendConn)
 
-	switch config.Backend.Balance {
-	case Random:
-		return GetBackendRandom()
-	case Url:
-		return GetBackendByURI(target.Addr())
-	default:
-		return GetBackendByURI(target.Addr())
+	// Pick up the first connection, spawn goroute to clean the others.
+	go func() {
+		fired := false
+		for _ = range backends {
+			backConn := <-ch
+			if backConn.err == nil {
+				if !fired {
+					chConn <- backConn
+					fired = true
+				} else {
+					log.Debugf("closing bad connection: %v", backConn)
+					backConn.ssConn.Close()
+				}
+			}
+		}
+	}()
+
+	select {
+	case backConn := <-chConn:
+		return backConn.ssConn, backConn.back, nil
+	case <-time.After(time.Second * 10):
+		return nil, nil, ErrNoAvailableServer
 	}
 }
 
 func GetAllBackends() map[string]*Backend {
 	return backends
-}
-
-/*
- Get backend by random algorithm
-*/
-func GetBackendRandom() (addr string, backend *Backend, err error) {
-	keys := backendKeys()
-	randint := rand.Intn(len(backends))
-	key := keys[randint]
-	return key, backends[key], nil
-}
-
-/*
- Get backend by consistent hash algorithm on target URL.
-*/
-func GetBackendByURI(url string) (addr string, backend *Backend, err error) {
-	if backendRing == nil {
-		return "", nil, ErrRingNotInit
-	}
-
-	for i := 0; i < 2; i++ {
-		key, ok := backendRing.GetNode(url)
-		if !ok || key == "" {
-			// ErrNoAvailableServer, re-think all servers as available.
-			log.Debugf("No available servers, restore all servers (%v)", i)
-			initHashRing()
-		} else {
-			return key, backends[key], nil
-		}
-	}
-	return "", nil, ErrNoAvailableServer
 }

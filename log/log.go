@@ -9,10 +9,8 @@ const (
 )
 
 var (
-	format = logging.MustStringFormatter(
-		`%{color}%{level:.5s}%{color:reset} %{message}`,
-	)
-	log = logging.MustGetLogger(log_name)
+	log    = logging.MustGetLogger(log_name)
+	format = logging.MustStringFormatter("%{color}%{level:.5s}%{color:reset} %{message}")
 )
 
 func init() {

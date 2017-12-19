@@ -52,3 +52,7 @@ func NewTarget(hostStr string, client net.Conn) (*Target, error) {
 func (t *Target) Addr() string {
 	return net.JoinHostPort(t.Host, strconv.Itoa(t.Port))
 }
+
+func (t *Target) String() string {
+	return t.Addr()
+}

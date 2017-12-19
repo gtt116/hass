@@ -61,19 +61,23 @@ func (p *Proxyer) popConnPair(connId int) {
 
 // Hass's version of socks5 server:
 // pick up a backend shadowsocks server then pipe source and server.
-func (p *Proxyer) DoProxy(tgt *Target) error {
-	conn := tgt.Client
-	targetAddr := tgt.Addr()
+func (p *Proxyer) DoProxy(target *Target) error {
+	conn := target.Client
+	defer conn.Close()
+
+	targetAddr := target.Addr()
 	startAt := time.Now()
 
-	ssConn, server, err := ConnBackend(p.cfg, tgt)
+	ssConn, server, err := GetConnection(p.cfg, target)
 	if err != nil {
+		log.Errorf("▶ %v failed: %s", target, err)
 		return err
 	}
+
 	defer ssConn.Close()
 
 	latency := int64(time.Since(startAt) / time.Millisecond)
-	log.Debugf("Proxy %v => %v (%vms)", server, targetAddr, latency)
+	log.Infof("▶ %v ▶ %v [%vms]", server, target, latency)
 
 	connTrack := &ConnTrack{
 		LocalLocalAddr:   conn.(*net.TCPConn).LocalAddr().String(),
@@ -87,8 +91,8 @@ func (p *Proxyer) DoProxy(tgt *Target) error {
 	defer p.popConnPair(connId)
 
 	// Maybe I can think about a way to make a valid request by my self :P
-	if tgt.req != nil {
-		tgt.req.Write(ssConn)
+	if target.req != nil {
+		target.req.Write(ssConn)
 	}
 
 	server.IncreseConnCount()

@@ -49,8 +49,8 @@ func main() {
 	}
 	go socks.Serve()
 
-	socksProbe := &pkg.Socks5{
-		Ipaddr: "127.0.0.1",
+	socksProbe := &pkg.HTTPProxy{
+		IPAddr: "127.0.0.1",
 		Port:   config.Local.SocksPort + 1,
 		Proxy:  proxyProbe,
 	}

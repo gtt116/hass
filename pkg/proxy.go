@@ -63,8 +63,8 @@ func (p *Proxyer) DoProxy(target *Target) error {
 	}
 	defer ssConn.Close()
 
-	latency := int64(time.Since(startAt) / time.Millisecond)
-	log.Infof("▶ %v ▶ %v [%vms]", backend, target, latency)
+	latency := time.Since(startAt)
+	log.Infof("▶ %v ▶ %v [%v]", backend, target, latency)
 
 	// Maybe I can think about a way to make a valid request by my self :P
 	if target.req != nil {
@@ -82,8 +82,11 @@ func (p *Proxyer) DoProxy(target *Target) error {
 	go copyStream(conn, ssConn, recvStats, &wait)
 	wait.Wait()
 
-	backend.UpdateStats(recvStats)
-
+	if p.Probe {
+		recvStats.duration += latency
+		backend.UpdateStats(recvStats)
+		DoSort()
+	}
 	return nil
 }
 

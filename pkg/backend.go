@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/gtt116/hass/log"
@@ -14,67 +13,71 @@ import (
 
 var (
 	// key is shawdowsocks server addr like "192.2.2.2:8080"
-	backends = make(map[string]*Backend)
+	backends    = make(map[string]*Backend)
+	backendList = make([]*Backend, 0)
 
 	// Errors
 	ErrNoAvailableServer = errors.New("No available server")
 	ErrRingNotInit       = errors.New("Hash Ring not init")
+	rr_index             = 0 // the index to RoundRobin balance
 )
 
 type Backend struct {
-	addr   string // id
+	addr   string // id, form (Host:Port)
 	cipher *ss.Cipher
+	ConnStats
+}
 
-	InBytes        int64
-	OutBytes       int64
-	ConnCountCur   int64
-	ConnCountTotal int64
-	ConnCountErr   int64
-	lock           sync.Mutex
+type ConnStats struct {
+	bytes    int64
+	duration time.Duration
+	bps      float64 // Byte per second
+}
+
+func NewBackend(addr string, cipher *ss.Cipher) *Backend {
+	return &Backend{addr: addr, cipher: cipher}
+}
+
+// Do connect to ss by given a target addr(formed "Host:Port")
+func (b *Backend) Conn(addr string) (net.Conn, error) {
+	log.Debugf("Connect ss: %v, request %v", b, addr)
+
+	// dial timeout is 3 seconds.
+	return ss.Dial(addr, b.String(), b.Cipher())
 }
 
 func (b *Backend) String() string {
 	return b.addr
 }
 
-func (b *Backend) AddInBytes(bytes int64) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	b.InBytes += bytes
-}
-
-func (b *Backend) AddOutBytes(bytes int64) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	b.OutBytes += bytes
-}
-
-func (b *Backend) IncreseConnCount() {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	b.ConnCountCur++
-	b.ConnCountTotal++
-}
-
-func (b *Backend) DecreseConnCount() {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	b.ConnCountCur--
-}
-
-func (b *Backend) AddErr() {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	b.ConnCountErr++
+func (b *Backend) Bps() string {
+	return fmt.Sprintf("%vKB, %.2fKB/s", b.bytes/1024, b.bps/1024)
 }
 
 func (b *Backend) Cipher() *ss.Cipher {
 	return b.cipher.Copy()
 }
 
+func (b *Backend) UpdateStats(stats *ConnStats) {
+	duration := stats.duration
+	bytes := stats.bytes
+	// caculate bps
+	var bps float64
+	seconds := duration / time.Second
+	if seconds > 0 {
+		bps = float64(bytes) / float64(seconds)
+	}
+
+	// update stats
+	b.bps = (b.bps*float64(b.bytes) + bps*float64(bytes)) / (float64(b.bytes) + float64(bytes))
+	if b.bytes < bytes {
+		b.bytes = bytes
+	}
+}
+
 func ConfigBackend(cfg *Config) error {
 	for _, server := range cfg.Backend.Servers {
-		err := addBackend(server.IP, server.Port, server.Method, server.Password)
+		err := addOneBackend(server.IP, server.Port, server.Method, server.Password)
 		if err != nil {
 			return err
 		}
@@ -82,7 +85,7 @@ func ConfigBackend(cfg *Config) error {
 	return nil
 }
 
-func addBackend(host string, port int, method string, password string) (err error) {
+func addOneBackend(host string, port int, method string, password string) (err error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 
 	cipher, err := ss.NewCipher(method, password)
@@ -90,8 +93,10 @@ func addBackend(host string, port int, method string, password string) (err erro
 		return err
 	}
 
-	backend := &Backend{addr: addr, cipher: cipher}
+	backend := NewBackend(addr, cipher)
 	backends[addr] = backend
+
+	backendList = append(backendList, backend)
 
 	log.Debugln("Add backend:", addr)
 	return nil
@@ -107,12 +112,18 @@ func (bc *BackendConn) String() string {
 	return fmt.Sprintf("%v #%v", bc.back, bc.err)
 }
 
-// Connect to a ss server, return BackendConn object and error through channel.
-func connBackend(target *Target, backend *Backend, ch chan *BackendConn) {
-	log.Debugf("Connect ss: %v, request %v", backend, target)
-	// dial timeout is 3 seconds.
-	ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
-	ch <- &BackendConn{backend, ssConn, err}
+func (bc *BackendConn) Close() {
+	if !bc.Error() {
+		bc.ssConn.Close()
+	}
+}
+
+func (bc *BackendConn) Backend() *Backend {
+	return bc.back
+}
+
+func (bc *BackendConn) Error() bool {
+	return bc.err != nil
 }
 
 // Pick up the first connection return through a channel, close the other connections.
@@ -128,29 +139,66 @@ func choiceConnection(conns chan *BackendConn) chan *BackendConn {
 					chConn <- backConn
 					fired = true
 				} else {
-					log.Debugf("closing bad connection: %v", backConn)
+					log.Debugf("closing unused connection: %v", backConn)
 					backConn.ssConn.Close()
 				}
 			}
 		}
 	}()
+
 	return chConn
 }
 
+func connBackend(target *Target, backend *Backend, ch chan *BackendConn) {
+	log.Debugf("Connect ss: %v, request %v", backend, target)
+	// dial timeout is 3 seconds.
+	ssConn, err := ss.Dial(target.Addr(), backend.String(), backend.Cipher())
+	ch <- &BackendConn{backend, ssConn, err}
+}
+
 // Get a connection to a backend server. The caller should close the connection.
-func GetConnection(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
-	ch := make(chan *BackendConn)
-	for _, backend := range backends {
-		go connBackend(target, backend, ch)
+func BestConnection(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
+	if len(backendList) == 0 {
+		return nil, nil, ErrNoAvailableServer
 	}
 
-	chConn := choiceConnection(ch)
+	best := backendList[0]
+	for _, b := range backendList {
+		if b.bps > best.bps {
+			best = b
+		}
+	}
+	ch := make(chan *BackendConn)
+	go connBackend(target, best, ch)
 
-	select {
-	case backConn := <-chConn:
-		return backConn.ssConn, backConn.back, nil
-	case <-time.After(time.Second * 10):
-		return nil, nil, ErrNoAvailableServer
+	// FIXME: If return error, retry another backend
+	backConn := <-ch
+	return backConn.ssConn, backConn.back, nil
+}
+
+// Using round robin algorithm to probe the backend server's bps.
+func ProbeConnection(config *Config, target *Target) (conn net.Conn, backend *Backend, err error) {
+	timeout := time.After(time.Second * 20)
+	for {
+		backend := backendList[rr_index]
+		log.Infof("Probe server: %v #%v", backend, backend.Bps())
+		rr_index += 1
+		if rr_index > len(backendList)-1 {
+			rr_index = 0
+		}
+		ch := make(chan *BackendConn)
+		go connBackend(target, backend, ch)
+
+		select {
+		case backConn := <-ch:
+			if backConn.Error() {
+				continue
+			} else {
+				return backConn.ssConn, backConn.back, nil
+			}
+		case <-timeout:
+			return nil, nil, ErrNoAvailableServer
+		}
 	}
 }
 

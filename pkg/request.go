@@ -49,10 +49,12 @@ func NewTarget(hostStr string, client net.Conn) (*Target, error) {
 	return t, nil
 }
 
+// The form of "Host:Port"
 func (t *Target) Addr() string {
 	return net.JoinHostPort(t.Host, strconv.Itoa(t.Port))
 }
 
+// The same as Addr()
 func (t *Target) String() string {
 	return t.Addr()
 }

@@ -1,12 +1,21 @@
 package pkg
 
 import (
+	"io"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/gtt116/hass/log"
 )
+
+var (
+	backStats map[string]*ConnStats
+)
+
+func init() {
+	backStats = make(map[string]*ConnStats, 10)
+}
 
 type ConnTrack struct {
 	LocalLocalAddr   string
@@ -24,39 +33,15 @@ type Proxy interface {
 // Proxyer implement interface Proxy
 // TODO: think about better name for it.
 type Proxyer struct {
-	cfg        *Config
-	lock       *sync.Mutex
-	ConnTracks map[int]*ConnTrack
-	ConnTotal  int
+	cfg   *Config
+	Probe bool // if probe is true, will do rr balance and record the bps of backend
 }
 
 func NewProxyer(config *Config) *Proxyer {
 	return &Proxyer{
-		cfg:        config,
-		lock:       new(sync.Mutex),
-		ConnTracks: make(map[int]*ConnTrack, 1000),
-		ConnTotal:  0,
+		cfg:   config,
+		Probe: false,
 	}
-}
-
-func (p *Proxyer) ConnCount() int {
-	return len(p.ConnTracks)
-}
-
-func (p *Proxyer) pushConnPair(conntrack *ConnTrack) int {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-
-	connId := p.ConnTotal
-	p.ConnTotal++
-	p.ConnTracks[connId] = conntrack
-	return connId
-}
-
-func (p *Proxyer) popConnPair(connId int) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	delete(p.ConnTracks, connId)
 }
 
 // Hass's version of socks5 server:
@@ -65,55 +50,52 @@ func (p *Proxyer) DoProxy(target *Target) error {
 	conn := target.Client
 	defer conn.Close()
 
-	targetAddr := target.Addr()
 	startAt := time.Now()
 
-	ssConn, server, err := GetConnection(p.cfg, target)
+	method := BestConnection
+	if p.Probe {
+		method = ProbeConnection
+	}
+	ssConn, backend, err := method(p.cfg, target)
 	if err != nil {
 		log.Errorf("▶ %v failed: %s", target, err)
 		return err
 	}
-
 	defer ssConn.Close()
 
 	latency := int64(time.Since(startAt) / time.Millisecond)
-	log.Infof("▶ %v ▶ %v [%vms]", server, target, latency)
-
-	connTrack := &ConnTrack{
-		LocalLocalAddr:   conn.(*net.TCPConn).LocalAddr().String(),
-		LocalRemoteAddr:  conn.(*net.TCPConn).RemoteAddr().String(),
-		RemoteLocalAddr:  ssConn.LocalAddr().String(),
-		RemoteRemoteAddr: ssConn.RemoteAddr().String(),
-		Target:           targetAddr,
-		Latency:          latency,
-	}
-	connId := p.pushConnPair(connTrack)
-	defer p.popConnPair(connId)
+	log.Infof("▶ %v ▶ %v [%vms]", backend, target, latency)
 
 	// Maybe I can think about a way to make a valid request by my self :P
 	if target.req != nil {
 		target.req.Write(ssConn)
 	}
 
-	server.IncreseConnCount()
-	defer server.DecreseConnCount()
+	sendStats := &ConnStats{}
+	recvStats := &ConnStats{}
 
-	timeout := p.cfg.Backend.Timeout
+	var wait sync.WaitGroup
+	wait.Add(2)
+	// client -> hass -> ss
+	go copyStream(ssConn, conn, sendStats, &wait)
+	// client <- hass <- ss
+	go copyStream(conn, ssConn, recvStats, &wait)
+	wait.Wait()
 
-	inChan := make(chan int64, 1)
-	outChan := make(chan int64, 1)
-
-	go CopyNetIO(ssConn, conn, inChan, "client => shawdowsocks", timeout)
-	go CopyNetIO(conn, ssConn, outChan, "shawdowsocks => client", timeout)
-
-	for i := 0; i < 2; i++ {
-		select {
-		case inBytes := <-inChan:
-			server.AddInBytes(inBytes)
-		case outBytes := <-outChan:
-			server.AddOutBytes(outBytes)
-		}
-	}
+	backend.UpdateStats(recvStats)
 
 	return nil
+}
+
+// Copy stream from src to dst until EOF or some errors happend.
+func copyStream(dst net.Conn, src net.Conn, stats *ConnStats, wait *sync.WaitGroup) {
+	defer wait.Done()
+	defer dst.Close()
+	defer src.Close()
+
+	start := time.Now()
+	written, _ := io.Copy(dst, src)
+
+	stats.bytes = written
+	stats.duration = time.Since(start)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"time"
 
 	"github.com/gtt116/hass/log"
 	"github.com/gtt116/hass/pkg"
@@ -31,10 +32,8 @@ func main() {
 	}
 
 	proxy := pkg.NewProxyer(config)
-
-	admin := pkg.NewProxyAdmin(config, proxy)
-	go admin.StartSampling()
-	go admin.ServeHTTP()
+	proxyProbe := pkg.NewProxyer(config)
+	proxyProbe.Probe = true
 
 	httpp := &pkg.HTTPProxy{
 		IPAddr: config.Local.Host,
@@ -48,5 +47,17 @@ func main() {
 		Port:   config.Local.SocksPort,
 		Proxy:  proxy,
 	}
-	socks.Serve()
+	go socks.Serve()
+
+	socksProbe := &pkg.Socks5{
+		Ipaddr: "127.0.0.1",
+		Port:   config.Local.SocksPort + 1,
+		Proxy:  proxyProbe,
+	}
+	go socksProbe.Serve()
+
+	go pkg.StartChecker(config)
+	for {
+		time.Sleep(time.Second * 1)
+	}
 }

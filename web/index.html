@@ -3,34 +3,10 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>web</title>
+    <link rel="shortcut icon" type="image/ico" href="/static/favicon.ico"/>
+    <title>Hass</title>
   </head>
   <body>
-    <div id="app">
-      {{ message }}
-    </div>
-    
-    <div id="app-2">
-      <span v-bind:title="message">
-          House your mouse over me
-      </span>
-    </div>
-
-    <div id="app-4">
-      <ol>
-        <li v-for="todo in todos">
-          {{ todo.text }}
-        </li>
-      </ol>
-    </div>
-
-    <div id="app5">
-      <p v-bind:id="disabled">{{ message }} </p>
-      <input v-model="message">
-      <button v-on:click="onMe">click</button>
-      <p v-if="seen">Now you see me</p>
-      <span> {{ now }} </span>
-    </div>
-
+    <div id="app"> </div>
   </body>
 </html>

@@ -2,66 +2,16 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import App from './App'
-//import router from './router'
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
+import router from './router'
 
+Vue.use(ElementUI)
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
-var app = new Vue({
+new Vue({
   el: '#app',
-//  router,
-//  template: '<App/>',
-  data: {
-    message: "hello world"
-  },
-//  components: { App }
+  router,
+  render: h => h(App)
 })
-
-var app2 = new Vue({
-  el: "#app-2",
-  data: {
-    message: "fuck you"
-  }
-})
-
-var app4 = new Vue({
-  el: "#app-4",
-  data: {
-    todos: [
-      {text: "haha"},
-      {text: "haha1kj"},
-      {text: "haha1kj2222"}
-    ]
-  }
-})
-
-var app5 = new Vue({
-  el: "#app5",
-
-  data: {
-    message: "em.....",
-    count: 0,
-    seen: false,
-    disabled: true
-  },
-
-  computed: {
-    now: function ()  {
-      return Date.now()
-    }
-  },
-
-  methods: {
-    onMe: function () {
-      this.message = 'why click me!!!!!!' + this.count
-      this.count += 1
-    }
-  }
-
-})
-
-Vue.compoment('todo-item', {
-  template: '<li>This is todo</li>'
-})
-
-

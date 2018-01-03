@@ -1,5 +1,6 @@
 <template>
 <div>
+  <h2 class="title">Setting</h2>
   <el-row class="detail">
     <h3>Basic</h3>
     <div class="setting-form">
@@ -79,11 +80,20 @@ export default {
   name: 'Setting',
   methods: {
     submit1() {
-      console.log(this.form)
+      this.$notify({
+        title: '成功',
+        message: '这是一条成功的提示消息',
+        type: 'success'
+      }); 
     },
     submit2() {
       console.log(this.form2);
       console.log(this.form3);
+      this.$notify({
+        title: '成功',
+        message: '这是两条成功的提示消息',
+        type: 'success'
+      }); 
     },
     addMore () {
         this.form3.servers.push({})

@@ -1,29 +1,39 @@
 <template>
 <div>
+  <h2 class="title">
+    <span>Dashboard</span>
+    <el-button type="primary" size="mini" class="title-button" @click="refresh">
+      <i class="el-icon-refresh"></i>
+    </el-button> 
+  </h2>
   <div id="wall">
   <el-row :gutter="40">
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-upload"></i>
-        {{ count }} Servers
+        <span>{{ count }}</span>
+        Servers
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-rank"></i>
-        {{ connections }} Connections
+        <span>{{ connections }} </span>
+        Connections
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-upload2"></i>
-        {{ sent }} KB/s
+        <span>{{ sent }} </span>
+        KB/s
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-download"></i>
-        {{ recv }} KB/s
+        <span>{{ recv }}</span>
+        KB/s
       </div>
     </el-col>
   </el-row>
@@ -32,14 +42,16 @@
   <el-row class="detail">
     <h4>Servers</h4>
     <div>
-      <el-table :data="tableData" stripe>
-        <el-table-column prop="ip" label="IP" width="100">
+      <el-table :data="servers" stripe>
+        <el-table-column prop="ip" label="IP">
         </el-table-column>
-        <el-table-column prop="sent" label="sent rate" width="100">
+        <el-table-column prop="sent" label="Sent Rate">
         </el-table-column>
-        <el-table-column prop="recv" label="recv rate" width="200"> 
+        <el-table-column prop="recv" label="Recv Rate">
         </el-table-column>
-        <el-table-column prop="trend" label="trends">
+        <el-table-column prop="connections" label="Connections">
+        </el-table-column>
+        <el-table-column prop="trend" label="Trends">
         </el-table-column>
       </el-table>
     </div>
@@ -48,7 +60,7 @@
   <el-row class="detail">
     <h4>Connections</h4>
     <div>
-      <el-table :data="tableData2" stripe>
+      <el-table :data="connection_list" stripe>
         <el-table-column prop="source" label="source"></el-table-column>
         <el-table-column prop="server" label="server"></el-table-column>
         <el-table-column prop="target" label="target"></el-table-column>
@@ -64,34 +76,43 @@
 <script>
 export default {
   name: 'Dashboard',
+  methods: {
+    refresh () {
+      console.log("refresh")
+    }
+  },
   data () {
     return {
       count: 5,
       connections: 5,
       sent: 30,
       recv: 39,
-      tableData: [{
+      servers: [{
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        connections:123,
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        connections:123,
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        connections:123,
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        connections:123,
         trend: [12,34,35,54]
       }],
-      tableData2: [{
+      connection_list: [{
         source: "127.0.0.1:232",
         server: "2.3.4.5:242",
         target: "www.google.com:443",
@@ -122,9 +143,17 @@ export default {
 }
 .hero {
   text-align: center;
-  background-color: #E9EEF3;
+  background-color: #ffffff;
   line-height: 100px;
   font-size: 20px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  box-shadow: 1px 1px 1px #eee;
+}
+
+.hero span {
+  font-weight: bold;
+  font-size: 26px;
 }
 </style>
 

@@ -3,7 +3,7 @@
 
 <el-container>
   <el-header>
-  <a href="https://github.com/gtt116/hass">
+  <a href="/">
     <img src="/static/favicon.png" width="40"/>
   </a>
   </el-header>
@@ -41,33 +41,42 @@ export default {
 </script>
 
 <style>
-  body {
+body {
     margin: 0px;
     font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
-  }
-  a {
-      text-decoration: none;
-  }
-  .el-header {
-    background-color: #4267b2;
+}
+a {
+    text-decoration: none;
+}
+
+h2.title {
+    margin-top: 0;
+    display: flex;
+}
+.title-button {
+    margin-left: 20px;
+}
+.el-header {
+    background-color: #2b9eeb;
     text-align: left;
     line-height: 88px;
-  }
-  
-  .el-aside {
+}
+
+.el-aside {
     background-color: #e6e6e6;
     color: #333;
     text-align: left;
     line-height: 200px;
-  }
-  
-  .el-main {
+}
+
+.el-main {
     min-height: 200px;
-  }
+}
 
 .detail {
-  border: 1px solid #eee;
-  padding:10px 30px 30px;
-  margin-bottom: 40px;
+    border-radius: 4px;
+    border: 1px solid #eee;
+    padding:10px 30px 30px;
+    margin-bottom: 40px;
 }
 </style>

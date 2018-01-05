@@ -52,4 +52,5 @@ func StartChecker(config *Config) {
 	for {
 		check(config, false)
 	}
+	log.Errorln("checker goroute abnormally exit..")
 }

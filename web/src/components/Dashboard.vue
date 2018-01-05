@@ -11,29 +11,25 @@
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-upload"></i>
-        <span>{{ count }}</span>
-        Servers
+        <span>{{ total.count }}</span> Servers
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-rank"></i>
-        <span>{{ connections }} </span>
-        Connections
+        <span>{{ total.connections }}</span> Connections
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-upload2"></i>
-        <span>{{ sent }} </span>
-        KB/s
+        <span>{{ total.sent }}</span> KB/s
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-download"></i>
-        <span>{{ recv }}</span>
-        KB/s
+        <span>{{ total.recv }}</span> KB/s
       </div>
     </el-col>
   </el-row>
@@ -45,9 +41,11 @@
       <el-table :data="servers" stripe>
         <el-table-column prop="ip" label="IP">
         </el-table-column>
-        <el-table-column prop="sent" label="Sent Rate">
+        <el-table-column prop="sent" label="Sent rate">
         </el-table-column>
-        <el-table-column prop="recv" label="Recv Rate">
+        <el-table-column prop="recv" label="Recv rate">
+        </el-table-column>
+        <el-table-column prop="msg" label="Messge">
         </el-table-column>
         <el-table-column prop="connections" label="Connections">
         </el-table-column>
@@ -60,7 +58,7 @@
   <el-row class="detail">
     <h4>Connections</h4>
     <div>
-      <el-table :data="connection_list" stripe>
+      <el-table :data="connections" stripe>
         <el-table-column prop="source" label="source"></el-table-column>
         <el-table-column prop="server" label="server"></el-table-column>
         <el-table-column prop="target" label="target"></el-table-column>
@@ -83,27 +81,32 @@ export default {
   },
   data () {
     return {
-      count: 5,
-      connections: 5,
-      sent: 30,
-      recv: 39,
+      total: {
+        count: 5,
+        connections: 5,
+        sent: 30,
+        recv: 39
+      },
       servers: [{
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
         connections:123,
+        msg: "Hi loow",
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
         connections:123,
+        msg: "Hi loow",
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
         connections:123,
+        msg: "Hi loow",
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
@@ -113,6 +116,10 @@ export default {
         trend: [12,34,35,54]
       }],
       connection_list: [{
+        msg: "Hi loow",
+        trend: [12,34,35,54]
+      }],
+      connections: [{
         source: "127.0.0.1:232",
         server: "2.3.4.5:242",
         target: "www.google.com:443",
@@ -130,8 +137,7 @@ export default {
         target: "www.google.com:443",
         sent: 234,
         recv: 234,
-      }
-      ]
+      }]
     }
   }
 }

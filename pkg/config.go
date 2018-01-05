@@ -3,6 +3,7 @@ package pkg
 import (
 	"errors"
 	"io/ioutil"
+	"math"
 
 	"gopkg.in/yaml.v2"
 )
@@ -17,6 +18,12 @@ type LocalConfig struct {
 	SocksPort int `yaml:"socks_port"`
 	HttpPort  int `yaml:"http_port"`
 	Host      string
+}
+
+// Find the max port in SocksPort and HttpPort, the http port used to probe will the next one.
+func (lc *LocalConfig) ProbeHttpPort() int {
+	ret := math.Max(float64(lc.SocksPort), float64(lc.HttpPort)) + 1
+	return int(ret)
 }
 
 type BackendConfig struct {

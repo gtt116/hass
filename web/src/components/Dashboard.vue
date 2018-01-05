@@ -5,25 +5,25 @@
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-upload"></i>
-        {{ count }} Servers
+        {{ total.count }} Servers
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-rank"></i>
-        {{ connections }} Connections
+        {{ total.connections }} Connections
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-upload2"></i>
-        {{ sent }} KB/s
+        {{ total.sent }} KB/s
       </div>
     </el-col>
     <el-col :span="6">
       <div class="hero">
         <i class="el-icon-download"></i>
-        {{ recv }} KB/s
+        {{ total.recv }} KB/s
       </div>
     </el-col>
   </el-row>
@@ -32,7 +32,7 @@
   <el-row class="detail">
     <h4>Servers</h4>
     <div>
-      <el-table :data="tableData" stripe>
+      <el-table :data="servers" stripe>
         <el-table-column prop="ip" label="IP">
         </el-table-column>
         <el-table-column prop="sent" label="Sent rate">
@@ -50,7 +50,7 @@
   <el-row class="detail">
     <h4>Connections</h4>
     <div>
-      <el-table :data="tableData2" stripe>
+      <el-table :data="connections" stripe>
         <el-table-column prop="source" label="source"></el-table-column>
         <el-table-column prop="server" label="server"></el-table-column>
         <el-table-column prop="target" label="target"></el-table-column>
@@ -68,11 +68,13 @@ export default {
   name: 'Dashboard',
   data () {
     return {
-      count: 5,
-      connections: 5,
-      sent: 30,
-      recv: 39,
-      tableData: [{
+      total: {
+        count: 5,
+        connections: 5,
+        sent: 30,
+        recv: 39
+      },
+      servers: [{
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
@@ -97,7 +99,7 @@ export default {
         msg: "Hi loow",
         trend: [12,34,35,54]
       }],
-      tableData2: [{
+      connections: [{
         source: "127.0.0.1:232",
         server: "2.3.4.5:242",
         target: "www.google.com:443",
@@ -115,8 +117,7 @@ export default {
         target: "www.google.com:443",
         sent: 234,
         recv: 234,
-      }
-      ]
+      }]
     }
   }
 }

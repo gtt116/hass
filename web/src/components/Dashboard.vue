@@ -33,11 +33,13 @@
     <h4>Servers</h4>
     <div>
       <el-table :data="tableData" stripe>
-        <el-table-column prop="ip" label="IP" width="100">
+        <el-table-column prop="ip" label="IP">
         </el-table-column>
-        <el-table-column prop="sent" label="sent rate" width="100">
+        <el-table-column prop="sent" label="Sent rate">
         </el-table-column>
-        <el-table-column prop="recv" label="recv rate" width="200"> 
+        <el-table-column prop="recv" label="Recv rate">
+        </el-table-column>
+        <el-table-column prop="msg" label="Messge">
         </el-table-column>
         <el-table-column prop="trend" label="trends">
         </el-table-column>
@@ -74,21 +76,25 @@ export default {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        msg: "Hi loow",
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        msg: "Hi loow",
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        msg: "Hi loow",
         trend: [12,34,35,54]
       }, {
         ip: "2.3.4.5",
         sent: 23,
         recv: 23,
+        msg: "Hi loow",
         trend: [12,34,35,54]
       }],
       tableData2: [{

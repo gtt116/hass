@@ -56,5 +56,7 @@ func main() {
 	go socksProbe.Serve()
 
 	go pkg.StartChecker(config)
+
+	go pkg.StartWebServer(config)
 	select {}
 }

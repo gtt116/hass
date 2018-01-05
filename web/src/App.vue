@@ -53,9 +53,11 @@ h2.title {
     margin-top: 0;
     display: flex;
 }
-.title-button {
-    margin-left: 20px;
+
+h2 > span {
+  margin-right: 20px;
 }
+
 .el-header {
     background-color: #2b9eeb;
     text-align: left;

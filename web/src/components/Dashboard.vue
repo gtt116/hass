@@ -76,68 +76,39 @@ export default {
   name: 'Dashboard',
   methods: {
     refresh () {
-      console.log("refresh")
+      this.fetchData()
+    },
+    fetchData () {
+      fetch('http://127.0.0.1:7777/api/total')
+      .then(res => { return res.json() })
+      .then(json => {
+        this.total = json
+      })
+
+      fetch('http://127.0.0.1:7777/api/servers')
+      .then(res => { return res.json() })
+      .then(json => {
+        this.servers = json
+      })
+
+      fetch('http://127.0.0.1:7777/api/connections')
+      .then(res => { return res.json() })
+      .then(json => {
+        this.connections = json
+      })
     }
+  },
+  created () {
+    this.fetchData()
+  },
+  watch: {
+    '$route': 'fetchData'
   },
   data () {
     return {
-      total: {
-        count: 5,
-        connections: 5,
-        sent: 30,
-        recv: 39
-      },
-      servers: [{
-        ip: "2.3.4.5",
-        sent: 23,
-        recv: 23,
-        connections:123,
-        msg: "Hi loow",
-        trend: [12,34,35,54]
-      }, {
-        ip: "2.3.4.5",
-        sent: 23,
-        recv: 23,
-        connections:123,
-        msg: "Hi loow",
-        trend: [12,34,35,54]
-      }, {
-        ip: "2.3.4.5",
-        sent: 23,
-        recv: 23,
-        connections:123,
-        msg: "Hi loow",
-        trend: [12,34,35,54]
-      }, {
-        ip: "2.3.4.5",
-        sent: 23,
-        recv: 23,
-        connections:123,
-        trend: [12,34,35,54]
-      }],
-      connection_list: [{
-        msg: "Hi loow",
-        trend: [12,34,35,54]
-      }],
-      connections: [{
-        source: "127.0.0.1:232",
-        server: "2.3.4.5:242",
-        target: "www.google.com:443",
-        sent: 234,
-        recv: 234,
-      }, {
-        source: "127.0.0.1:232",
-        server: "2.3.4.5:242",
-        target: "www.google.com:443",
-        sent: 234,
-        recv: 234,
-      }, {
-        source: "127.0.0.1:232",
-        server: "2.3.4.5:242",
-        target: "www.google.com:443",
-        sent: 234,
-        recv: 234,
-      }]
+      total: { },
+      servers: [],
+      connections: []
     }
   }
 }

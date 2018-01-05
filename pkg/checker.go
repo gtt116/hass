@@ -22,7 +22,7 @@ func check(config *Config, first bool) {
 		}
 	}()
 
-	proxyUrl, err := url.Parse("http://127.0.0.1:7073")
+	proxyUrl, err := url.Parse(fmt.Sprintf("http://127.0.0.1:%v", config.Local.ProbeHttpPort()))
 	if err != nil {
 		log.Errorln("[probe] parse url error:", err)
 		return
@@ -46,6 +46,7 @@ func check(config *Config, first bool) {
 }
 
 func StartChecker(config *Config) {
+	log.Infoln("Starting checker goroute.")
 	for _ = range backendList {
 		check(config, true)
 	}

@@ -31,7 +31,7 @@ func doProbe(config *Config, first bool) {
 	}
 	log.Debugln("[probe] sending probe request..")
 	myClient := &http.Client{
-		Timeout: time.Duration(3 * time.Second),
+		Timeout: time.Duration(10 * time.Second),
 		Transport: &http.Transport{
 			Proxy:             http.ProxyURL(proxyUrl),
 			DisableKeepAlives: true,

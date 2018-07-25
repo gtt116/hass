@@ -64,7 +64,7 @@ func (p *Proxyer) DoProxy(target *Target) error {
 	defer ssConn.Close()
 
 	latency := time.Since(startAt)
-	log.Infof("▶ %v ▶ %v [%v]", backend, target, latency)
+	log.Infof("▶ %21s ▶ %v [%v]", backend, target, latency)
 
 	// Maybe I can think about a way to make a valid request by my self :P
 	if target.req != nil {

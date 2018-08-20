@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"

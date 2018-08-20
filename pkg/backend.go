@@ -29,6 +29,7 @@ var (
 
 	// Errors
 	ErrNoAvailableServer = errors.New("No available server")
+	ErrDuplicated = errors.New("Duplicated register server")
 )
 
 type Backend struct {
@@ -130,6 +131,10 @@ func ConfigBackend(cfg *Config) error {
 func addOneBackend(host string, port int, method string, password string) (err error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 
+	if haveBackend(addr) {
+		return ErrDuplicated
+	}
+
 	cipher, err := ss.NewCipher(method, password)
 	if err != nil {
 		return err
@@ -142,6 +147,15 @@ func addOneBackend(host string, port int, method string, password string) (err e
 
 	log.Debugln("Add backend:", addr)
 	return nil
+}
+
+func haveBackend(addr string) bool {
+	for _, back := range backendList {
+		if back.addr == addr {
+			return true
+		}
+	}
+	return false
 }
 
 type BackendConn struct {

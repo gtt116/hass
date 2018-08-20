@@ -22,6 +22,7 @@ backend:
   port: 29123
   password: 123123
   method: "base64"
+  iplist: www.gaott.info/hass.txt
 
   servers:
   - ip: 188.42.254.18
@@ -81,5 +82,9 @@ backend:
 
 	if c.Backend.Servers[1].Method != "base64" {
 		t.Error("Server 1 method should be base64")
+	}
+
+	if c.Backend.IPList != "www.gaott.info/hass.txt" {
+		t.Error("IPList should be www.gaott.info/hass.txt")
 	}
 }

@@ -15,10 +15,12 @@ func probeUrl() string {
 	return fmt.Sprintf("https://stackoverflow.com/")
 }
 
-func check(config *Config, first bool) {
+func doProbe(config *Config, first bool) {
 	defer func() {
 		if !first {
-			time.Sleep(time.Second * time.Duration(rand.Intn(60)))
+			waitTime := rand.Intn(60)
+			log.Infoln("[probe] Sleep %d seconds for the next checking", waitTime)
+			time.Sleep(time.Second * time.Duration(waitTime))
 		}
 	}()
 
@@ -47,10 +49,12 @@ func check(config *Config, first bool) {
 
 func StartChecker(config *Config) {
 	for _ = range backendList {
-		check(config, true)
+		doProbe(config, true)
 	}
+
 	for {
-		check(config, false)
+		doProbe(config, false)
 	}
+
 	log.Errorln("checker goroute abnormally exit..")
 }

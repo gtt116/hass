@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gtt116/hass/log"
+	"strings"
 )
 
 // Some webs from alexa top100.
@@ -50,15 +51,60 @@ func probeUrl() string {
 	return probeUrls[idx]
 }
 
-func doProbe(config *Config, first bool) {
+func check(config *Config, first bool) {
+
 	defer func() {
 		if !first {
 			waitTime := rand.Intn(60)
-			log.Infoln("[probe] Sleep %d seconds for the next checking", waitTime)
+			log.Infof("[probe] Sleep %d seconds for the next checking\n", waitTime)
 			time.Sleep(time.Second * time.Duration(waitTime))
 		}
 	}()
 
+	updateBackend(config)
+
+	probe(config)
+
+}
+
+func updateBackend(config *Config) {
+	updateServer := config.Backend.IPList
+
+	if updateServer == "" {
+		return
+	}
+
+	response, err := http.Get(updateServer)
+	if err != nil {
+		log.Errorf("Error when updating server: %+v\n", err)
+		return
+	}
+
+	if response.StatusCode != 200 {
+		log.Errorf("Updating server: %s return: %s\n", updateServer, response.Status)
+		return
+	}
+
+	defer response.Body.Close()
+
+	content, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		log.Errorf("Error when updating server: %+v\n", err)
+		return
+	}
+
+	ips := strings.Split(string(content), "\n")
+
+	for _, ip := range ips {
+		if ip == "" {
+			continue
+		}
+		addOneBackend(ip, config.Backend.Port, config.Backend.Method, config.Backend.Password)
+	}
+}
+
+func probe(config *Config) {
 	proxyUrl, err := url.Parse("http://127.0.0.1:7073")
 	if err != nil {
 		log.Errorln("[probe] parse url error:", err)
@@ -86,11 +132,11 @@ func doProbe(config *Config, first bool) {
 
 func StartChecker(config *Config) {
 	for _ = range backendList {
-		doProbe(config, true)
+		check(config, true)
 	}
 
 	for {
-		doProbe(config, false)
+		check(config, false)
 	}
 
 	log.Errorln("checker goroute abnormally exit..")

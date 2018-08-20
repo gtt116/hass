@@ -2,13 +2,13 @@ all: win linux mac
 target = ./cmd/hass/*.go
 
 win:
-	GOOS=windows go build -o hass.exe $(target)
+	GOOS=windows GOARCH=amd64 go build -o hass.exe $(target)
 
 linux:
-	go build -o hass $(target)
+	GOOS=linux GOARCH=amd64 go build -o hass $(target)
 
 mac:
-	GOOS=darwin go build -o hass_mac $(target)
+	GOOS=darwin GOARCH=amd64 go build -o hass_mac $(target)
 
 test:
 	go test -v ./pkg/...

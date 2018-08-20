@@ -29,7 +29,7 @@ var (
 
 	// Errors
 	ErrNoAvailableServer = errors.New("No available server")
-	ErrDuplicated = errors.New("Duplicated register server")
+	ErrDuplicated        = errors.New("Duplicated register server")
 )
 
 type Backend struct {
@@ -145,7 +145,7 @@ func addOneBackend(host string, port int, method string, password string) (err e
 	backendList = append(backendList, backend)
 	orderedBackendList = append(orderedBackendList, backend)
 
-	log.Debugln("Add backend:", addr)
+	log.Infoln("Add backend:", addr)
 	return nil
 }
 

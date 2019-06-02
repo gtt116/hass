@@ -10,9 +10,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"strings"
 
-	"github.com/codahale/chacha20"
+	"github.com/aead/chacha20"
 	"golang.org/x/crypto/blowfish"
 	"golang.org/x/crypto/cast5"
 	"golang.org/x/crypto/salsa20/salsa"
@@ -65,9 +64,17 @@ func newStream(block cipher.Block, err error, key, iv []byte,
 	}
 }
 
-func newAESStream(key, iv []byte, doe DecOrEnc) (cipher.Stream, error) {
+func newAESCFBStream(key, iv []byte, doe DecOrEnc) (cipher.Stream, error) {
 	block, err := aes.NewCipher(key)
 	return newStream(block, err, key, iv, doe)
+}
+
+func newAESCTRStream(key, iv []byte, doe DecOrEnc) (cipher.Stream, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	return cipher.NewCTR(block, iv), nil
 }
 
 func newDESStream(key, iv []byte, doe DecOrEnc) (cipher.Stream, error) {
@@ -95,7 +102,11 @@ func newRC4MD5Stream(key, iv []byte, _ DecOrEnc) (cipher.Stream, error) {
 }
 
 func newChaCha20Stream(key, iv []byte, _ DecOrEnc) (cipher.Stream, error) {
-	return chacha20.New(key, iv)
+	return chacha20.NewCipher(iv, key)
+}
+
+func newChaCha20IETFStream(key, iv []byte, _ DecOrEnc) (cipher.Stream, error) {
+	return chacha20.NewCipher(iv, key)
 }
 
 type salsaStreamCipher struct {
@@ -145,15 +156,20 @@ type cipherInfo struct {
 }
 
 var cipherMethod = map[string]*cipherInfo{
-	"aes-128-cfb": {16, 16, newAESStream},
-	"aes-192-cfb": {24, 16, newAESStream},
-	"aes-256-cfb": {32, 16, newAESStream},
-	"des-cfb":     {8, 8, newDESStream},
-	"bf-cfb":      {16, 8, newBlowFishStream},
-	"cast5-cfb":   {16, 8, newCast5Stream},
-	"rc4-md5":     {16, 16, newRC4MD5Stream},
-	"chacha20":    {32, 8, newChaCha20Stream},
-	"salsa20":     {32, 8, newSalsa20Stream},
+	"aes-128-cfb":   {16, 16, newAESCFBStream},
+	"aes-192-cfb":   {24, 16, newAESCFBStream},
+	"aes-256-cfb":   {32, 16, newAESCFBStream},
+	"aes-128-ctr":   {16, 16, newAESCTRStream},
+	"aes-192-ctr":   {24, 16, newAESCTRStream},
+	"aes-256-ctr":   {32, 16, newAESCTRStream},
+	"des-cfb":       {8, 8, newDESStream},
+	"bf-cfb":        {16, 8, newBlowFishStream},
+	"cast5-cfb":     {16, 8, newCast5Stream},
+	"rc4-md5":       {16, 16, newRC4MD5Stream},
+	"rc4-md5-6":     {16, 6, newRC4MD5Stream},
+	"chacha20":      {32, 8, newChaCha20Stream},
+	"chacha20-ietf": {32, 12, newChaCha20IETFStream},
+	"salsa20":       {32, 8, newSalsa20Stream},
 }
 
 func CheckCipherMethod(method string) error {
@@ -172,7 +188,6 @@ type Cipher struct {
 	dec  cipher.Stream
 	key  []byte
 	info *cipherInfo
-	ota  bool // one-time auth
 	iv   []byte
 }
 
@@ -182,13 +197,6 @@ type Cipher struct {
 func NewCipher(method, password string) (c *Cipher, err error) {
 	if password == "" {
 		return nil, errEmptyPassword
-	}
-	var ota bool
-	if strings.HasSuffix(strings.ToLower(method), "-auth") {
-		method = method[:len(method)-5] // len("-auth") = 5
-		ota = true
-	} else {
-		ota = false
 	}
 	mi, ok := cipherMethod[method]
 	if !ok {
@@ -202,7 +210,6 @@ func NewCipher(method, password string) (c *Cipher, err error) {
 	if err != nil {
 		return nil, err
 	}
-	c.ota = ota
 	return c, nil
 }
 
@@ -252,6 +259,5 @@ func (c *Cipher) Copy() *Cipher {
 	nc := *c
 	nc.enc = nil
 	nc.dec = nil
-	nc.ota = c.ota
 	return &nc
 }

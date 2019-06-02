@@ -14,17 +14,16 @@ import (
 	// "log"
 	"os"
 	"reflect"
-	"strings"
 	"time"
 )
 
 type Config struct {
-	Server     interface{} `json:"server"`
-	ServerPort int         `json:"server_port"`
-	LocalPort  int         `json:"local_port"`
-	Password   string      `json:"password"`
-	Method     string      `json:"method"` // encryption method
-	Auth       bool        `json:"auth"`   // one time auth
+	Server       interface{} `json:"server"`
+	ServerPort   int         `json:"server_port"`
+	LocalPort    int         `json:"local_port"`
+	LocalAddress string      `json:"local_address"`
+	Password     string      `json:"password"`
+	Method       string      `json:"method"` // encryption method
 
 	// following options are only used by server
 	PortPassword map[string]string `json:"port_password"`
@@ -41,7 +40,7 @@ var readTimeout time.Duration
 
 func (config *Config) GetServerArray() []string {
 	// Specifying multiple servers in the "server" options is deprecated.
-	// But for backward compatiblity, keep this.
+	// But for backward compatibility, keep this.
 	if config.Server == nil {
 		return nil
 	}
@@ -87,10 +86,6 @@ func ParseConfig(path string) (config *Config, err error) {
 		return nil, err
 	}
 	readTimeout = time.Duration(config.Timeout) * time.Second
-	if strings.HasSuffix(strings.ToLower(config.Method), "-auth") {
-		config.Method = config.Method[:len(config.Method)-5]
-		config.Auth = true
-	}
 	return
 }
 
@@ -98,7 +93,7 @@ func SetDebug(d DebugLog) {
 	Debug = d
 }
 
-// Useful for command line to override options specified in config file
+// UpdateConfig: Useful for command line to override options specified in config file
 // Debug is not updated.
 func UpdateConfig(old, new *Config) {
 	// Using reflection here is not necessary, but it's a good exercise.

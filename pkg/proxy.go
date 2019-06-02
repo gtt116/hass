@@ -56,6 +56,10 @@ func (p *Proxyer) DoProxy(target *Target) error {
 	if p.Probe {
 		method = ProbeConnection
 	}
+
+	sendStats := &ConnStats{}
+	recvStats := &ConnStats{}
+
 	ssConn, backend, err := method(p.cfg, target)
 	if err != nil {
 		log.Errorf("▶ %v failed: %s", target, err)
@@ -70,9 +74,6 @@ func (p *Proxyer) DoProxy(target *Target) error {
 	if target.req != nil {
 		target.req.Write(ssConn)
 	}
-
-	sendStats := &ConnStats{}
-	recvStats := &ConnStats{}
 
 	var wait sync.WaitGroup
 	wait.Add(2)

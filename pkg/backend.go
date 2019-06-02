@@ -107,14 +107,16 @@ func (b *Backend) Cipher() *ss.Cipher {
 
 func (b *Backend) UpdateStats(stats *ConnStats) {
 	// caculate bps
-	var bps float64
+	var newBps float64
 	seconds := stats.duration / time.Second
 	if seconds > 0 {
-		bps = float64(stats.bytes) / float64(seconds)
+		newBps = float64(stats.bytes) / float64(seconds)
+	} else {
+		newBps = 0
 	}
 
 	// Append BpsRing
-	b.now.Value = bps
+	b.now.Value = newBps
 	b.now = b.now.Next()
 }
 
@@ -219,6 +221,12 @@ func ProbeConnection(config *Config, target *Target) (conn net.Conn, backend *Ba
 		tried += 1
 		if err != nil {
 			log.Infof("Ping-> %v failed: %v", backend, err)
+
+			// duration = 0 results in 0 bps.
+			recvStats := &ConnStats{}
+			recvStats.duration = 0
+			backend.UpdateStats(recvStats)
+
 			if tried == len(backendList) {
 				return nil, nil, ErrNoAvailableServer
 			} else {
@@ -244,6 +252,7 @@ func (sb SortedBacked) Less(a, b int) bool {
 	return sb[a].MeanBps() < sb[b].MeanBps()
 }
 
+// Sort by average byte per second, greater Bps mean better performance.
 func DoSort() {
 	sort.Sort(sort.Reverse(SortedBacked(orderedBackendList)))
 	log.Infoln("Top:")

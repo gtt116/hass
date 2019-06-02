@@ -21,6 +21,7 @@ type LocalConfig struct {
 
 type BackendConfig struct {
 	Timeout  int // FIXME: delete it
+	IPList   string
 	Balance  string
 	Port     int
 	Method   string
